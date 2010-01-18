@@ -8,6 +8,6 @@ public class AuraBot extends Bot {
     }
 
     public void AI() {
-        System.out.println("I'm an Aura!");
+        Debugger.debug_print("I'm an Aura!");
     }
 }

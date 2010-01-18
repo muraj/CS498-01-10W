@@ -8,6 +8,6 @@ public class SoldierBot extends Bot {
     }
 
     public void AI() {
-        System.out.println("I'm an Soldier!");
+        Debugger.debug_print("I'm a Soldier!");
     }
 }

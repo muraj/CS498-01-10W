@@ -8,6 +8,6 @@ public class CommBot extends Bot {
     }
 
     public void AI() {
-        System.out.println("I'm an Comm!");
+        Debugger.debug_print("I'm a Comm!");
     }
 }

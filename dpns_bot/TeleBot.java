@@ -8,6 +8,6 @@ public class TeleBot extends Bot {
     }
 
     public void AI() {
-        System.out.println("I'm an Tele!");
+        Debugger.debug_print("I'm a Tele!");
     }
 }

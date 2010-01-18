@@ -8,6 +8,6 @@ public class ArchonBot extends Bot {
     }
 
     public void AI() {
-        System.out.println("I'm an Archon!");
+        Debugger.debug_print("I'm an Archon!");
     }
 }

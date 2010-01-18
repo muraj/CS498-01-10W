@@ -10,7 +10,7 @@ public class Bot {
     }
 
     public void AI() {
-        System.out.println("I'm a bot!");
+        Debugger.debug_print("I'm a bot!");
     }
 
     public void yield(){

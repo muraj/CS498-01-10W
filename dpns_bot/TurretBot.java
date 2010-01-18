@@ -8,6 +8,6 @@ public class TurretBot extends Bot {
     }
 
     public void AI() {
-        System.out.println("I'm an Turret!");
+        Debugger.debug_print("I'm a Turret!");
     }
 }

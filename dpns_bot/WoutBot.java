@@ -8,6 +8,6 @@ public class WoutBot extends Bot {
     }
 
     public void AI() {
-        System.out.println("I'm an Wout!");
+        Debugger.debug_print("I'm a Wout!");
     }
 }

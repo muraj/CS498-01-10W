@@ -8,6 +8,6 @@ public class ChainerBot extends Bot {
     }
 
     public void AI() {
-        System.out.println("I'm an Chainer!");
+        Debugger.debug_print("I'm a Chainer!");
     }
 }
