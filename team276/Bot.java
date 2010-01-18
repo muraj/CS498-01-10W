@@ -2,16 +2,14 @@ package team276;
 
 import battlecode.common.RobotController;
 
-public class Bot {
+public abstract class Bot {
     protected RobotController rc;
-
+    protected int bcCounterStart;
     public Bot(RobotController rc) {
         this.rc = rc;
     }
 
-    public void AI() {
-        Debugger.debug_print("I'm a bot!");
-    }
+    public abstract void AI() throws Exception;
 
     public void yield(){
         rc.yield();

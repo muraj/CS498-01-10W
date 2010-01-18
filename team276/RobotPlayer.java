@@ -23,16 +23,13 @@ public class RobotPlayer implements Runnable {
     }
 
     public void run() {
-        while(true) {
-            try {
-                b.AI();
-            } catch(Exception e) {
-                System.out.println("!! Caught Exception !!");
-                e.printStackTrace();
-            }
-
-            Debugger.debug_print_total_bc_used();
-            b.yield();
+        try {
+            b.AI();
+        } catch(Exception e) {
+            System.out.println("!! Caught Exception !!");
+            e.printStackTrace();
         }
+        Debugger.debug_print_total_bc_used();
+        b.yield();  //Should never get here.
     }
 }

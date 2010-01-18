@@ -7,7 +7,10 @@ public class SoldierBot extends Bot {
         super(rc);
     }
 
-    public void AI() {
-        Debugger.debug_print("I'm a Soldier!");
+    public void AI() throws Exception{
+        while(true){
+            Debugger.debug_print("I'm a Soldier!");
+            rc.yield();
+        }
     }
 }

@@ -1,13 +1,21 @@
 package team276;
 
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 public class ArchonBot extends Bot {
     public ArchonBot(RobotController rc) {
         super(rc);
     }
 
-    public void AI() {
-        Debugger.debug_print("I'm an Archon!");
+    public void AI() throws Exception{
+        while(true){
+            Debugger.debug_set_counter(this);
+            Debugger.debug_print("I'm an Archon!");
+            Debugger.debug_print_energon(this.rc);
+            Debugger.debug_print_counter(this);
+            //Handle communication here.
+            Debugger.debug_print_total_bc_used();
+            rc.yield();
+        }
     }
 }

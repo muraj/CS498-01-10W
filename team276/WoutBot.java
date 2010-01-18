@@ -7,7 +7,11 @@ public class WoutBot extends Bot {
         super(rc);
     }
 
-    public void AI() {
-        Debugger.debug_print("I'm a Wout!");
+    public void AI() throws Exception{
+        while(true){
+            Debugger.debug_print("I'm a Wout!");
+            Debugger.debug_print_energon(this.rc);
+            rc.yield();
+        }
     }
 }
