@@ -1,10 +1,10 @@
 package team276;
 
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 public class CommBot extends Bot {
-    public CommBot(RobotController rc) {
-        super(rc);
+    public CommBot(RobotController rc, Team t) {
+        super(rc, t);
     }
 
     public void AI() throws Exception{

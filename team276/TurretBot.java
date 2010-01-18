@@ -1,10 +1,10 @@
 package team276;
 
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 public class TurretBot extends Bot {
-    public TurretBot(RobotController rc) {
-        super(rc);
+    public TurretBot(RobotController rc, Team t) {
+        super(rc,t);
     }
 
     public void AI() throws Exception{

@@ -1,10 +1,10 @@
 package team276;
 
-import battlecode.common.RobotController;
+import battlecode.common.*;
 
 public class TeleBot extends Bot {
-    public TeleBot(RobotController rc) {
-        super(rc);
+    public TeleBot(RobotController rc, Team t) {
+        super(rc,t);
     }
 
     public void AI() throws Exception{
