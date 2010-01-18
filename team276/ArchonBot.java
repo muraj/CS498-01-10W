@@ -1,4 +1,4 @@
-package dpns_bot;
+package team276;
 
 import battlecode.common.RobotController;
 

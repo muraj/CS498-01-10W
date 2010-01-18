@@ -1,38 +1,38 @@
 package team276;
 
-import battlecode.common.*;
-import static battlecode.common.GameConstants.*;
+import battlecode.common.Clock;
+import battlecode.common.RobotController;
+import battlecode.common.RobotType;
 
 public class RobotPlayer implements Runnable {
+    private Bot b;
 
-    private final RobotController myRC;
-
-    public RobotPlayer(RobotController rc) {
-        myRC = rc;
+    public RobotPlayer(RobotController rc) throws Exception {
+        switch(rc.getRobotType()) {
+            case ARCHON:        b = new ArchonBot(rc);  break;
+            case AURA:          b = new AuraBot(rc);    break;
+            case CHAINER:       b = new ChainerBot(rc); break;
+            case COMM:          b = new CommBot(rc);    break;
+            case SOLDIER:       b = new SoldierBot(rc); break;
+            case TELEPORTER:    b = new TeleBot(rc);    break;
+            case TURRET:        b = new TurretBot(rc);  break;
+            case WOUT:          b = new WoutBot(rc);    break;
+            default:
+                throw new Exception("Robot Type not supported yet.");
+          }
     }
 
     public void run() {
-        //System.out.println("STARTING");
-        while (true) {
+        while(true) {
             try {
-                /*** beginning of main loop ***/
-                while (myRC.isMovementActive()) {
-                    myRC.yield();
-                }
-
-                if (myRC.canMove(myRC.getDirection())) {
-                    System.out.println("about to move");
-                    myRC.moveForward();
-                } else {
-                    myRC.setDirection(myRC.getDirection().rotateRight());
-                }
-                myRC.yield();
-
-                /*** end of main loop ***/
-            } catch (Exception e) {
-                System.out.println("caught exception:");
+                b.AI();
+            } catch(Exception e) {
+                System.out.println("!! Caught Exception !!");
                 e.printStackTrace();
             }
+
+            Debugger.debug_print_total_bc_used();
+            b.yield();
         }
     }
 }
