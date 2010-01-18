@@ -60,11 +60,7 @@ class WoutBot extends Bot {
 }
 
 public class RobotPlayer implements Runnable {
-    private final RC rc;
-
-    public RobotPlayer(RC rc) {
-        this.rc = rc;
-			private Bot b;
+	private Bot b;
     public RobotPlayer(RobotController rc) throws Exception{
 		switch(rc.getRobotType()) {
             case ARCHON:        b = new ArchonBot(rc);  break;
