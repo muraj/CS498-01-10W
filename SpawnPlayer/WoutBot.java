@@ -9,8 +9,14 @@ public class WoutBot extends Bot {
 
     public void AI() throws Exception{
         while(true){
-            Debugger.debug_print("I'm a Wout!");
-            Debugger.debug_print_energon(this.rc);
+            while(rc.isMovementActive() || rc.hasActionSet()) rc.yield();
+            MapLocation myloc = rc.getLocation();
+            for(MapLocation x : rc.senseAlliedArchons()){
+                if(x.isAdjacentTo(myloc) || x.equals(myloc)){
+                    rc.transferFlux(rc.getFlux(),x,RobotLevel.IN_AIR);
+                    break;
+                }
+            }
             rc.yield();
         }
     }

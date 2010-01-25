@@ -12,18 +12,17 @@ public class ArchonBot extends Bot {
 
     public void AI() throws Exception{
         while(true){
-            while(rc.isMovementActive()) rc.yield();
+            while(rc.isMovementActive() || rc.hasActionSet()) rc.yield();
             Direction dir = rc.getDirection();
             MapLocation loc = rc.getLocation();
             MapLocation ahead = loc.add(dir);
             if(loc.isAdjacentTo(ahead) && rc.senseTerrainTile(ahead).getType() == TerrainTile.TerrainType.LAND){
                 Robot r = rc.senseGroundRobotAtLocation(ahead);
                 if(r == null){
-                    if(rc.getEnergonLevel() > RobotType.SOLDIER.spawnCost()+MINIMUM_ENERGY_TO_SPAWN){
-                        rc.spawn(RobotType.SOLDIER);
-                        rc.yield();
-                        continue;
-                    }
+                    if(rc.getFlux() > RobotType.COMM.spawnFluxCost())
+                        rc.spawn(RobotType.COMM);
+                    else if(rc.getEnergonLevel() > RobotType.WOUT.spawnCost()+MINIMUM_ENERGY_TO_SPAWN)
+                        rc.spawn(RobotType.WOUT);
                 }
                 else{
                     RobotInfo ri = rc.senseRobotInfo(r);
@@ -31,14 +30,13 @@ public class ArchonBot extends Bot {
                         && rc.getEnergonLevel() > MINIMUM_ENERGY_TO_TRANSFER && !ri.type.isBuilding()){
                         rc.transferUnitEnergon(UNITENERGY_TRANSFER,ahead,RobotLevel.ON_GROUND);
                         rc.yield();
-                        continue;
+                        continue; //Transfer of energon does not take up the action/round.
                     }
                 }
             }
+            if(rc.hasActionSet()) continue;
             if(rc.canMove(rc.getDirection())) rc.moveForward();
             else rc.setDirection(dir.rotateRight());
-            Debugger.debug_print_total_bc_used();
-            rc.yield();
         }
     }
 }
