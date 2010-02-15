@@ -16,8 +16,8 @@ public class ArchonBot extends Bot {
         
         for(MapLocation i: alliedArchonLocs) {
             Direction tmp = myloc.directionTo(i);
-            dx += tmp.dx;
-            dy += tmp.dy;
+            dx -= tmp.dx;
+            dy -= tmp.dy;
         }
 
         dTmp = Util.coordToDirection(dx, dy);
@@ -33,8 +33,11 @@ public class ArchonBot extends Bot {
     }
 
     public void AI() throws Exception{
+        Debugger.debug_set_counter(this);
         breakout();
-
+        Debugger.debug_print_counter(this);
+        rc.yield();
+        rc.moveForward();
         while(true){
             Debugger.debug_set_counter(this);
             Debugger.debug_print("I'm an Archon!");
