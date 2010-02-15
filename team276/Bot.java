@@ -1,7 +1,6 @@
 package team276;
 
-import battlecode.common.RobotController;
-import battlecode.common.Team;
+import battlecode.common.*;
 
 public abstract class Bot {
     protected final RobotController rc;
