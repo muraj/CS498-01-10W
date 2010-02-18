@@ -16,15 +16,15 @@ public class Debugger {
         System.out.println("Total BC Used: " + Clock.getBytecodeNum());
     }
 
-   public static void debug_print_energon(RobotController rc) {
+    public static void debug_print_energon(RobotController rc) {
         System.out.println("Energon: " + rc.getEnergonLevel());
-   }
+    }
 
-   public static void debug_set_counter(Bot b) {
+    public static void debug_set_counter(Bot b) {
         b.bcCounterStart = Clock.getBytecodeNum();
-   }
+    }
 
-   public static void debug_print_counter(Bot b) {
+    public static void debug_print_counter(Bot b) {
         System.out.println("Total executed bytecodes:"+ (Clock.getBytecodeNum() - b.bcCounterStart));
-   }
+    }
 }

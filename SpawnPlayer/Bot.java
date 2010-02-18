@@ -16,7 +16,7 @@ public abstract class Bot {
 
     public abstract void AI() throws Exception;
 
-    public void yield(){
+    public void yield() {
         rc.yield();
     }
 }
