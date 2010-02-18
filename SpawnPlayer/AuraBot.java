@@ -7,8 +7,8 @@ public class AuraBot extends Bot {
         super(rc, t);
     }
 
-    public void AI() throws Exception{
-        while(true){
+    public void AI() throws Exception {
+        while (true) {
             Debugger.debug_print("I'm an Aura!");
             rc.yield();
         }
