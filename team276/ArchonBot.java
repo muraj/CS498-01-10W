@@ -8,8 +8,9 @@ public class ArchonBot extends Bot {
     }
 
     private void breakout() throws Exception {
-        int dx = 0,
-                 dy = 0;
+        int dx = 0;
+        int dy = 0;
+
         MapLocation[] alliedArchonLocs = rc.senseAlliedArchons();
         Direction dTmp;
 
@@ -35,6 +36,7 @@ public class ArchonBot extends Bot {
         Debugger.debug_print_counter(this);
         rc.yield();
         rc.moveForward();
+
         while (true) {
             Debugger.debug_set_counter(this);
             Debugger.debug_print("I'm an Archon!");
