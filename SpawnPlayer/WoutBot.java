@@ -10,8 +10,8 @@ public class WoutBot extends Bot {
 
     public void AI() throws Exception {
         while (true) {
-            Debugger.debug_print("I'm a Wout!");
-            Debugger.debug_print_energon(this.rc);
+            //Debugger.debug_print("I'm a Wout!");
+            //Debugger.debug_print_energon(this.rc);
             while (rc.isMovementActive()) rc.yield();
             Direction f = flock();
             if (f != Direction.OMNI) {
@@ -31,14 +31,13 @@ public class WoutBot extends Bot {
     public final double GOAL = 1.0;
 
     public Direction flock() throws Exception {
-        int[] cohesion=new int[2], seperation=new int[2], align=new int[2];
+        int[] seperation=new int[2], align=new int[2];
         MapLocation myloc = rc.getLocation();
         /* General swarm */
-        for (Robot r: rc.senseNearbyGroundRobots()) {
+        Robot[] rl = rc.senseNearbyGroundRobots();
+        for (Robot r: rl) {
             RobotInfo ri = rc.senseRobotInfo(r);
-            if (rc.getTeam() == ri.team) continue;
-            cohesion[0]+=ri.location.getX();
-            cohesion[1]+=ri.location.getY();
+            if (rc.getTeam() != ri.team) continue;
             seperation[0]+= myloc.getX() - ri.location.getX();
             seperation[1]+= myloc.getY() - ri.location.getY();
             align[0]+=ri.directionFacing.dx;
@@ -54,27 +53,19 @@ public class WoutBot extends Bot {
                 glen = tdist;
             }
         }
-        double clen = ZERO.distanceSquaredTo(new MapLocation(cohesion[0], cohesion[1]));
+        /* Calculate Vector lengths */
         double slen = ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
         double alen = ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
-        clen = clen == 0 ? 1 : clen;
-        slen = slen == 0 ? 1 : slen;
+        slen = slen == 0 ? 1 : slen;    //Prevent divide by zero
         alen = alen == 0 ? 1 : alen;
         glen = glen == 0 ? 1 : glen;
-        //Debugger.debug_print("cohesion: "+cohesion[0]+" "+cohesion[1]);
-        //Debugger.debug_print("seperation: "+seperation[0]+" "+seperation[1]);
-        //Debugger.debug_print("alignment: "+align[0]+" "+align[1]);
-        //Debugger.debug_print("goal: "+ (leader.getX() - myloc.getX()) + " " +(leader.getY() - myloc.getY()));
-        double outx = cohesion[0]*COHESION/Math.sqrt(clen)
-                      + seperation[0]*SEPERATION/Math.sqrt(slen)
+        /* Sum the vectors */
+        double outx = -seperation[0]/Math.sqrt(slen)*(SEPERATION - COHESION)    //Cohesion == -Seperation
                       + align[0]*ALIGNMENT/Math.sqrt(alen)
                       + (leader.getX() - myloc.getX())*GOAL/glen;
-        double outy = cohesion[1]*COHESION/Math.sqrt(clen)
-                      + seperation[1]*SEPERATION/Math.sqrt(slen)
+        double outy = -seperation[1]/Math.sqrt(slen)*(SEPERATION - COHESION)
                       + align[1]*ALIGNMENT/Math.sqrt(alen)
                       + (leader.getY() - myloc.getY())*GOAL/glen;
-        //Debugger.debug_print(outx+" "+outy);
-        //Debugger.debug_print("direction: "+ ZERO.directionTo(new MapLocation((int)(outx*100), (int)(outy*100))));
-        return ZERO.directionTo(new MapLocation((int)(outx*100), (int)(outy*100)));
+        return ZERO.directionTo(new MapLocation((int)(outx*10), (int)(outy*10)));
     }
 }
