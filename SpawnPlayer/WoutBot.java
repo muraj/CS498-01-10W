@@ -10,8 +10,6 @@ public class WoutBot extends Bot {
 
     public void AI() throws Exception {
         while (true) {
-            //Debugger.debug_print("I'm a Wout!");
-            //Debugger.debug_print_energon(this.rc);
             while (rc.isMovementActive()) rc.yield();
             Direction f = flock();
             if (f != Direction.OMNI) {
