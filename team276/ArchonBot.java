@@ -31,19 +31,19 @@ public class ArchonBot extends Bot {
     }
 
     public void AI() throws Exception {
-        Debugger.debug_set_counter(this);
+        Debugger.debugSetCounter(this);
         breakout();
-        Debugger.debug_print_counter(this);
+        Debugger.debugPrintCounter(this);
         rc.yield();
         rc.moveForward();
 
         while (true) {
-            Debugger.debug_set_counter(this);
-            Debugger.debug_print("I'm an Archon!");
-            Debugger.debug_print_energon(this.rc);
-            Debugger.debug_print_counter(this);
+            Debugger.debugSetCounter(this);
+            Debugger.debugPrint("I'm an Archon!");
+            Debugger.debugPrintEnergon(this.rc);
+            Debugger.debugPrintCounter(this);
             //Handle communication here.
-            Debugger.debug_print_total_bc_used();
+            Debugger.debugPrintTotalBCUsed();
             rc.yield();
         }
     }
