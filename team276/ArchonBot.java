@@ -28,6 +28,10 @@ public class ArchonBot extends Bot {
             msg.locations = new MapLocation[] { currentLocation };
             rc.broadcast(msg);
         }
+
+        else {
+            rc.suicide();
+        }
     }
 
     public void AI() throws Exception {
