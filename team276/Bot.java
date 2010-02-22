@@ -6,7 +6,8 @@ public abstract class Bot {
     protected final RobotController rc;
     protected final Team team;
     protected final int id;
-    protected int bcCounterStart;
+    protected int bcCounterStart;               // Count the BCs
+    protected int bcRoundCounterStart;          // Count the rounds
     protected MapLocation currentLocation;
     protected Direction currentDirection;
     protected MapLocation movementTarget;       // The overall target for the current set of movements
