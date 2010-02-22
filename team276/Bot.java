@@ -9,6 +9,8 @@ public abstract class Bot {
     protected int bcCounterStart;
     protected MapLocation currentLocation;
     protected Direction currentDirection;
+    protected MapLocation movementTarget;       // The overall target for the current set of movements
+    protected boolean underWay;                 // Are we currently moving towards a movementTarget?
 
     public Bot(RobotController rc, Team t) {
         this.rc = rc;
@@ -16,6 +18,8 @@ public abstract class Bot {
         this.team = t;
         this.currentLocation = rc.getLocation();
         this.currentDirection = rc.getDirection();
+        this.movementTarget = null;
+        this.underWay = false;
     }
 
     public abstract void AI() throws Exception;
