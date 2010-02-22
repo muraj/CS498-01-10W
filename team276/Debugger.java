@@ -7,23 +7,23 @@ public class Debugger {
         System.out.println(str);
     }
 
-    public static void debug_print_bc_used() {
+    public static void debug_printBCUsed() {
         System.out.println("BC Used: " + Clock.getBytecodeNum());
     }
 
-    public static void debug_print_total_bc_used() {
+    public static void debug_printTotalBCUsed() {
         System.out.println("Total BC Used: " + Clock.getBytecodeNum());
     }
 
-    public static void debug_print_energon(RobotController rc) {
+    public static void debug_printEnergon(RobotController rc) {
         System.out.println("Energon: " + rc.getEnergonLevel());
     }
 
-    public static void debug_set_counter(Bot b) {
+    public static void debug_setCounter(Bot b) {
         b.bcCounterStart = Clock.getBytecodeNum();
     }
 
-    public static void debug_print_counter(Bot b) {
+    public static void debug_printCounter(Bot b) {
         System.out.println("Total executed bytecodes:"+ (Clock.getBytecodeNum() - b.bcCounterStart));
     }
 }

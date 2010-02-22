@@ -44,7 +44,7 @@ public class RobotPlayer implements Runnable {
             System.out.println("!! Caught Exception !!");
             e.printStackTrace();
         }
-        Debugger.debug_print_total_bc_used();
+        Debugger.debug_printTotalBCUsed();
         b.yield();  //Should never get here.
     }
 }
