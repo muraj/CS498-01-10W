@@ -10,7 +10,7 @@ public class ChainerBot extends Bot {
     public void AI() throws Exception {
         while (true) {
             Debugger.debug_print("I'm a Chainer!");
-            rc.yield();
+            yield();
         }
     }
 }

@@ -34,7 +34,7 @@ public class ArchonBot extends Bot {
         Debugger.debug_setCounter(this);
         breakout();
         Debugger.debug_printCounter(this);
-        rc.yield();
+        yield();
         rc.moveForward();
 
         while (true) {
@@ -44,7 +44,7 @@ public class ArchonBot extends Bot {
             Debugger.debug_printCounter(this);
             //Handle communication here.
             Debugger.debug_printTotalBCUsed();
-            rc.yield();
+            yield();
         }
     }
 }
