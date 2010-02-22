@@ -36,7 +36,9 @@ public class ArchonBot extends Bot {
         rc.moveForward();
 
         while (true) {
+            beginUpkeep();
             Debugger.debug_print("I'm an Archon!");
+
             yield();
         }
     }

@@ -19,7 +19,11 @@ public abstract class Bot {
     }
 
     public abstract void AI() throws Exception;
-    public void beginUpkeep() { }
+
+    public void beginUpkeep() {
+        currentLocation = rc.getLocation();
+        currentDirection = rc.getDirection();
+    }
 
     public void endUpkeep() {
         Debugger.debug_printTotalBCUsed();
