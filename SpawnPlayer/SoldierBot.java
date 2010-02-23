@@ -25,8 +25,7 @@ public class SoldierBot extends Bot {
             }
             if (rc.canMove(rc.getDirection())) {
                 rc.moveForward();
-            }
-            else {
+            } else {
                 rc.setDirection(rc.getDirection().rotateRight());
             }
             rc.yield();

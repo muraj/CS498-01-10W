@@ -24,8 +24,7 @@ public class ArchonBot extends Bot {
                         rc.yield();
                         continue;
                     }
-                }
-                else {
+                } else {
                     RobotInfo ri = rc.senseRobotInfo(r);
                     if (ri.team == this.team && ri.energonLevel < ri.type.maxEnergon()
                             && rc.getEnergonLevel() > MINIMUM_ENERGY_TO_TRANSFER && !ri.type.isBuilding()) {
