@@ -3,27 +3,23 @@ package team276;
 import battlecode.common.*;
 
 public class Debugger {
-    public static void debugPrint(String str) {
+    public static void debug_print(String str) {
         System.out.println(str);
     }
 
-    public static void debugPrintBCUsed() {
+    public static void debug_printBCUsed() {
         System.out.println("BC Used: " + Clock.getBytecodeNum());
     }
 
-    public static void debugPrintTotalBCUsed() {
-        System.out.println("Total BC Used: " + Clock.getBytecodeNum());
-    }
-
-    public static void debugPrintEnergon(RobotController rc) {
+    public static void debug_printEnergon(RobotController rc) {
         System.out.println("Energon: " + rc.getEnergonLevel());
     }
 
-    public static void debugSetCounter(Bot b) {
+    public static void debug_setCounter(Bot b) {
         b.bcCounterStart = Clock.getBytecodeNum();
     }
 
-    public static void debugPrintCounter(Bot b) {
+    public static void debug_printCounter(Bot b) {
         System.out.println("Total executed bytecodes:"+ (Clock.getBytecodeNum() - b.bcCounterStart));
     }
 }
