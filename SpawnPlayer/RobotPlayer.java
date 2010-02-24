@@ -43,6 +43,7 @@ public class RobotPlayer implements Runnable {
         } catch (Exception e) {
             System.out.println("!! Caught Exception !!");
             e.printStackTrace();
+            b.getRC().breakpoint();
         }
         Debugger.debug_print_total_bc_used();
         b.yield();  //Should never get here.

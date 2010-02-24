@@ -32,7 +32,7 @@ public class WoutBot extends Bot {
     private static final int MAX_GROUP_SZ = 3;
 
     public Direction flock() throws Exception {
-        int[] seperation=new int[2], align=new int[2], collision=new int[2];
+        int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2];
         MapLocation myloc = rc.getLocation();
         /* General swarm */
         Robot[] rl = rc.senseNearbyGroundRobots();
@@ -76,12 +76,22 @@ public class WoutBot extends Bot {
                 glen = tdist;
             }
         }
+        if (rc.canSenseSquare(leader)) {
+            Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
+            goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
+            goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
+        } else {
+            goal[0] = leader.getX() - myloc.getX();
+            goal[1] = leader.getY() - myloc.getY();
+        }
         Debugger.debug_print_bc_used();
         Debugger.debug_print_counter(this);
         /* Calculate Vector lengths */
         double slen = ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
         double alen = ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
         double clen = ZERO.distanceSquaredTo(new MapLocation(collision[0], collision[1]));
+        glen = ZERO.distanceSquaredTo(new MapLocation(goal[0], goal[1]));
+
         slen = slen == 0 ? 1 : Math.sqrt(slen);    //Prevent divide by zero
         alen = alen == 0 ? 1 : Math.sqrt(alen);
         clen = clen == 0 ? 1 : Math.sqrt(clen);
@@ -92,11 +102,11 @@ public class WoutBot extends Bot {
         double outx = -seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
                       + align[0]*ALIGNMENT/alen
                       + collision[0]*COLLISION/clen
-                      + (leader.getX() - myloc.getX())*GOAL/glen;
+                      + goal[0]*GOAL/glen;
         double outy = -seperation[1]/slen*(SEPERATION - COHESION)
                       + align[1]*ALIGNMENT/alen
                       + collision[1]*COLLISION/clen
-                      + (leader.getY() - myloc.getY())*GOAL/glen;
+                      + goal[1]*GOAL/glen;
         Debugger.debug_print_counter(this);
         return ZERO.directionTo(new MapLocation((int)(outx*10), (int)(outy*10)));
     }
