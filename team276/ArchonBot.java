@@ -7,14 +7,43 @@ public class ArchonBot extends Bot {
         super(rc,t);
     }
 
-    public void AI() throws Exception{
-        while(true){
-            Debugger.debug_set_counter(this);
-            Debugger.debug_print("I'm an Archon!");
-            Debugger.debug_print_energon(this.rc);
-            Debugger.debug_print_counter(this);
+    private void breakout() throws Exception {
+        int dx = 0;
+        int dy = 0;
+
+        MapLocation[] alliedArchonLocs = rc.senseAlliedArchons();
+        Direction dTmp;
+
+        for (MapLocation i: alliedArchonLocs) {
+            Direction tmp = currentLocation.directionTo(i);
+            dx -= tmp.dx;
+            dy -= tmp.dy;
+        }
+
+        dTmp = Util.coordToDirection(dx, dy);
+        rc.setDirection(dTmp);
+
+        if (dTmp == Direction.NORTH_EAST) {
+            Message msg = new Message();
+            msg.locations = new MapLocation[] { currentLocation };
+            rc.broadcast(msg);
+        }
+    }
+
+    public void AI() throws Exception {
+        Debugger.debugSetCounter(this);
+        breakout();
+        Debugger.debugPrintCounter(this);
+        rc.yield();
+        rc.moveForward();
+
+        while (true) {
+            Debugger.debugSetCounter(this);
+            Debugger.debugPrint("I'm an Archon!");
+            Debugger.debugPrintEnergon(this.rc);
+            Debugger.debugPrintCounter(this);
             //Handle communication here.
-            Debugger.debug_print_total_bc_used();
+            Debugger.debugPrintTotalBCUsed();
             rc.yield();
         }
     }
