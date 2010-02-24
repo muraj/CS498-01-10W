@@ -9,7 +9,7 @@ public class AuraBot extends Bot {
 
     public void AI() throws Exception {
         while (true) {
-            Debugger.debugPrint("I'm an Aura!");
+            Debugger.debug_print("I'm an Aura!");
             rc.yield();
         }
     }
