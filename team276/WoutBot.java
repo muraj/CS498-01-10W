@@ -3,111 +3,32 @@ package team276;
 import battlecode.common.*;
 
 public class WoutBot extends Bot {
-    public final MapLocation ZERO = new MapLocation(0,0);
     public WoutBot(RobotController rc, Team t) {
         super(rc,t);
+        COHESION = 1.0;
+        SEPERATION = 1.0;
+        ALIGNMENT = 1.0;
+        COLLISION = 1.0;
+        GOAL = 1.0;
     }
 
     public void AI() throws Exception {
         while (true) {
-            while (rc.isMovementActive()) rc.yield();
+            while (rc.isMovementActive() || rc.isAttackActive()) rc.yield();
             Direction f = flock();
-            Debugger.debug_print_bc_used();
-            if (f != Direction.OMNI) {
-                if (rc.canMove(f)) rc.setDirection(f);
-                else if (rc.canMove(f.rotateLeft())) rc.setDirection(f.rotateLeft());
-                else rc.setDirection(f.rotateRight());
+            f = f == Direction.OMNI ? rc.getDirection() : f;
+            if(!rc.canMove(f)){
+                if (rc.canMove(f.rotateLeft())) f=f.rotateLeft();
+                else f=f.rotateRight();
+            }
+            rc.setIndicatorString(1,f.toString());
+            if(f != rc.getDirection()){ //Don't waste a turn turning if you don't have to.
+                rc.setDirection(f);
                 rc.yield();
             }
-            if (rc.canMove(rc.getDirection()))
+            if(rc.canMove(rc.getDirection()))
                 rc.moveForward();
             rc.yield();
         }
-    }
-    private static final double SEPERATION = 1.0;
-    private static final double COHESION = 1.0;
-    private static final double ALIGNMENT = 1.0;
-    private static final double COLLISION = 1.0;
-    private static final double GOAL = 1.0;
-    private static final int MAX_GROUP_SZ = 3;
-
-    public Direction flock() throws Exception {
-        int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2];
-        MapLocation myloc = rc.getLocation();
-        /* General swarm */
-        Robot[] rl = rc.senseNearbyGroundRobots();
-        Debugger.debug_print("Gathering rules");
-        Debugger.debug_print_bc_used();
-        Debugger.debug_set_counter(this);
-        int c = 0;
-        for (Robot r : rl) {
-            if (c > MAX_GROUP_SZ) break;    //Try to limit bytecodes.
-            RobotInfo ri = rc.senseRobotInfo(r);
-            if (rc.getTeam() != ri.team) continue;
-            else c++;
-            seperation[0]+= myloc.getX() - ri.location.getX();
-            seperation[1]+= myloc.getY() - ri.location.getY();
-            align[0]+=ri.directionFacing.dx;
-            align[1]+=ri.directionFacing.dy;
-        }
-        Debugger.debug_print_counter(this);
-        /* COLLISION GOAL */
-        Debugger.debug_print("Collision Rule");
-        Debugger.debug_set_counter(this);
-        for (Direction d : Direction.values()) {
-            if (d == Direction.OMNI || d == Direction.NONE) continue;
-            TerrainTile t = rc.senseTerrainTile(myloc.add(d));
-            if (t != null && t.getType() != TerrainTile.TerrainType.LAND) {
-                collision[0] -= d.dx;
-                collision[1] -= d.dy;
-            }
-        }
-        Debugger.debug_print_counter(this);
-        Debugger.debug_print_bc_used();
-        /* LEADER GOAL */
-        MapLocation leader = null;
-        double glen = Double.MAX_VALUE;
-        Debugger.debug_print("Finding closest Archon");
-        Debugger.debug_set_counter(this);
-        for (MapLocation t : rc.senseAlliedArchons()) {
-            double tdist = myloc.distanceSquaredTo(t);
-            if (tdist < glen) {
-                leader = t;
-                glen = tdist;
-            }
-        }
-        if (rc.canSenseSquare(leader)) {
-            Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
-            goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
-            goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
-        } else {
-            goal[0] = leader.getX() - myloc.getX();
-            goal[1] = leader.getY() - myloc.getY();
-        }
-        Debugger.debug_print_bc_used();
-        Debugger.debug_print_counter(this);
-        /* Calculate Vector lengths */
-        double slen = ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
-        double alen = ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
-        double clen = ZERO.distanceSquaredTo(new MapLocation(collision[0], collision[1]));
-        glen = ZERO.distanceSquaredTo(new MapLocation(goal[0], goal[1]));
-
-        slen = slen == 0 ? 1 : Math.sqrt(slen);    //Prevent divide by zero
-        alen = alen == 0 ? 1 : Math.sqrt(alen);
-        clen = clen == 0 ? 1 : Math.sqrt(clen);
-        glen = glen == 0 ? 1 : Math.sqrt(glen);
-        /* Sum the vectors */
-        Debugger.debug_print("Applying rules");
-        Debugger.debug_set_counter(this);
-        double outx = -seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
-                      + align[0]*ALIGNMENT/alen
-                      + collision[0]*COLLISION/clen
-                      + goal[0]*GOAL/glen;
-        double outy = -seperation[1]/slen*(SEPERATION - COHESION)
-                      + align[1]*ALIGNMENT/alen
-                      + collision[1]*COLLISION/clen
-                      + goal[1]*GOAL/glen;
-        Debugger.debug_print_counter(this);
-        return ZERO.directionTo(new MapLocation((int)(outx*10), (int)(outy*10)));
     }
 }
