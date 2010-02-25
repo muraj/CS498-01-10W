@@ -18,13 +18,18 @@ public class ArchonBot extends Bot {
     }
 
     public void AI() throws Exception {
+        beginUpkeep();
         breakout();
         yield();
 
-        movement = new Movement(this, currentLocation, currentLocation.getX() + 15, currentLocation.getY() - 15);
-
         while (true) {
             beginUpkeep();
+
+            // If we've completed a move, try another!
+            if(movement == null)
+                movement = new Movement(this, currentLocation, currentLocation.getX() + 15, currentLocation.getY() - 15);
+
+            handleMovement();
             yield();
         }
     }

@@ -27,17 +27,36 @@ public abstract class Bot {
     public void beginUpkeep() {
         currentLocation = rc.getLocation();
         currentDirection = rc.getDirection();
+        Debugger.debug_print("BEGIN TURN BEGIN TURN BEGIN TURN BEGIN TURN ");
         Debugger.debug_print("Current status: At: " + currentLocation + " Facing: " + currentDirection.name());
     }
 
     public void endUpkeep() {
         Debugger.debug_printTotalBCUsed();
         Debugger.debug_printEnergon(rc);
+        Debugger.debug_print("END TURN END TURN END TURN END TURN ");
+        Debugger.debug_print("");
     }
 
     public void yield() {
         endUpkeep();
         rc.yield();
+    }
+
+    public void handleMovement() throws Exception {
+        Debugger.debug_print("Handling movement");
+
+        if(underWay = false || movement == null || rc.getRoundsUntilMovementIdle() != 0) {
+            Debugger.debug_print("No movment queued or cooling down. Returning.");
+            return;
+        }
+
+        Debugger.debug_print("Movements queued. Doing them.");
+
+        if(movement.move() == false) {
+            movement = null;
+            underWay = false;
+        }
     }
 
     public void bp() {
