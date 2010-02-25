@@ -12,6 +12,7 @@ public abstract class Bot {
     protected Direction currentDirection;
     protected MapLocation movementTarget;       // The overall target for the current set of movements
     protected boolean underWay;                 // Are we currently moving towards a movementTarget?
+    protected Movement movement;
 
     public Bot(RobotController rc, Team t) {
         this.rc = rc;
@@ -19,8 +20,6 @@ public abstract class Bot {
         this.team = t;
         this.currentLocation = rc.getLocation();
         this.currentDirection = rc.getDirection();
-        this.movementTarget = null;
-        this.underWay = false;
     }
 
     public abstract void AI() throws Exception;
@@ -28,14 +27,22 @@ public abstract class Bot {
     public void beginUpkeep() {
         currentLocation = rc.getLocation();
         currentDirection = rc.getDirection();
+        Debugger.debug_print("Current status: At: " + currentLocation + " Facing: " + currentDirection.name());
     }
 
     public void endUpkeep() {
         Debugger.debug_printTotalBCUsed();
+        Debugger.debug_printEnergon(rc);
     }
 
     public void yield() {
         endUpkeep();
         rc.yield();
+    }
+
+    public void bp() {
+        Debugger.debug_print("Breakpoint hit");
+        rc.breakpoint();
+        yield();
     }
 }

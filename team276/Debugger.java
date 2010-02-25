@@ -20,11 +20,12 @@ public class Debugger {
     }
 
     public static void debug_setCounter(Bot b) {
+        System.out.println("Setting counter..");
         b.bcRoundCounterStart = Clock.getRoundNum();
         b.bcCounterStart = Clock.getBytecodeNum();
     }
 
     public static void debug_printCounter(Bot b) {
-        System.out.println("Total executed bytecodes:"+ (((Clock.getBytecodeNum() - b.bcCounterStart)) + ((Clock.getRoundNum() - b.bcRoundCounterStart) * GameConstants.BYTECODES_PER_ROUND)));
+        System.out.println("Counter: Executed bytecodes: " + (((Clock.getBytecodeNum() - b.bcCounterStart)) + ((Clock.getRoundNum() - b.bcRoundCounterStart) * GameConstants.BYTECODES_PER_ROUND)));
     }
 }

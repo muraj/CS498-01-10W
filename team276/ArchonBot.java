@@ -11,7 +11,6 @@ public class ArchonBot extends Bot {
         int dx = 0;
         int dy = 0;
 
-
         if(id != 91) {
             rc.suicide();
             yield();
@@ -21,6 +20,8 @@ public class ArchonBot extends Bot {
     public void AI() throws Exception {
         breakout();
         yield();
+
+        movement = new Movement(this, currentLocation, currentLocation.getX() + 15, currentLocation.getY() - 15);
 
         while (true) {
             beginUpkeep();
