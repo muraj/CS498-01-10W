@@ -9,7 +9,7 @@ public class SoldierBot extends Bot {
 
     public void AI() throws Exception {
         while (true) {
-            Debugger.debugPrint("I'm a Soldier!");
+            Debugger.debug_print("I'm a Soldier!");
             rc.yield();
         }
     }
