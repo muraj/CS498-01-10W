@@ -57,7 +57,14 @@ public class Movement {
 
     private void setDirection(Direction dir) throws Exception {
         Debugger.debug_print("Setting direction to: " + dir.name());
-        bot.rc.setDirection(dir);
+
+        // Make sure we don't somehow already have a move queued.
+        if(bot.rc.getRoundsUntilMovementIdle() == 0)
+            bot.rc.setDirection(dir);
+        else {
+            Debugger.debug_print("YOUR CODE FUCKED UP!");
+            bot.bp();
+        }
     }
 
     private void initCommon(Bot bot, MapLocation from, MapLocation target) {
