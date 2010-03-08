@@ -27,7 +27,7 @@ public class ArchonBot extends Bot {
 
             // If we've completed a move, try another!
             if(movement == null)
-                movement = new Movement(this, currentLocation, currentLocation.getX() + 15, currentLocation.getY() - 15);
+                movement = new Movement(this, currentLocation.getX() + 15, currentLocation.getY() - 15);
 
             handleMovement();
             yield();

@@ -36,6 +36,11 @@ public abstract class Bot {
         Debugger.debug_printEnergon(rc);
         Debugger.debug_print("END TURN END TURN END TURN END TURN ");
         Debugger.debug_print("");
+        Debugger.debug_print("");
+        Debugger.debug_print("");
+        Debugger.debug_print("");
+        Debugger.debug_print("");
+        Debugger.debug_print("");
     }
 
     public void yield() {
