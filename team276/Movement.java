@@ -12,37 +12,22 @@ public class Movement {
 
     private Status moveType;
     private final int MAXPATHLEN = 60;      // This shouldn't be larger than 60 for a 60x60 map
-    private int moves;                      // Number of moves in our queue
-    private int currentMove;                // The number of which move we're on
-    protected MapLocation from;             // Movement start location
     protected MapLocation target;           // Movement target location
-    protected MapLocation[] directPath;     // The direct path from start to target
+    protected MapLocation attMove;          // The map location of the attempted move.
     protected Direction dToObstacle;        // If we're following an obstacle, the direction to it
     protected Direction avoidanceDir;       // A direction to avoid an obstacle
+    protected Boolean bypassObstacle;       // FIXME: HACK: If this is set, make an immediate move in the current direction.
 
-    public Movement(Bot bot, MapLocation from, MapLocation target) {
-        initCommon(bot, from, target);
+    public Movement(Bot bot, MapLocation target) {
+        initCommon(bot, target);
     }
 
-    public Movement(Bot bot, MapLocation from, int tX, int tY) {
-        initCommon(bot, from, new MapLocation(tX, tY));
-    }
-
-    public Movement(Bot bot, int fX, int fY, MapLocation target) {
-        initCommon(bot, new MapLocation(fX, fY), target);
-    }
-
-    public Movement(Bot bot, int fX, int fY, int tX, int tY) {
-        initCommon(bot, new MapLocation(fX, fY), new MapLocation(tX, tY));
+    public Movement(Bot bot, int tX, int tY) {
+        initCommon(bot, new MapLocation(tX, tY));
     }
 
     private void moveForward() throws Exception {
         Debugger.debug_print("Moving forward to: " + bot.currentLocation.add(bot.currentDirection));
-
-        // Hack to not throw off our moves counter
-        // FIXME: This is probably not needed. Reinvestigate to verify.
-        if(moveType != Status.OBJECT)
-            moves++;
 
         // Safety first! Do some checks to make sure we can actually queue up this move without
         // blowing ourself up.
@@ -67,17 +52,14 @@ public class Movement {
         }
     }
 
-    private void initCommon(Bot bot, MapLocation from, MapLocation target) {
+    private void initCommon(Bot bot, MapLocation target) {
         Debugger.debug_print("New movement to: " + target);
         this.bot            = bot;
-        this.from           = from;
         this.target         = target;
-        this.moves          = 0;
-        this.currentMove    = 0;
         this.moveType       = Status.PATH;
+        this.bypassObstacle = false;
 
         Debugger.debug_print("initCommon(): CL " + bot.currentLocation + " target: " + target);
-        crunchDirectPath();
     }
 
     // move() -- If this returns false, we have no more moves to make. True otherwise
@@ -86,12 +68,16 @@ public class Movement {
         if(bot.currentLocation.equals(target)) {
             Debugger.debug_print("We're here! Get the hell out of the bus!");
             target          = null;
-            moves           = 0;
-            currentMove     = 0;
             moveType        = null;
-            directPath      = null;
             bot.bp();
             return false;
+        }
+
+        // FIXME: HACK
+        if(bypassObstacle) {
+            moveForward();
+            bypassObstacle = false;
+            return true;
         }
 
         switch(moveType) {
@@ -121,15 +107,10 @@ public class Movement {
         Direction td;
         TerrainTile.TerrainType tt;
 
-        // FIXME FIXME FIXME This shouldn't be nessecary
-        // If we're currently sitting on the tile that is our "next" move, do the move after it
-        // instead.
-        if(directPath[currentMove].equals(bot.currentLocation))
-            currentMove++;
-
-        // Check and see if we can actually move to the next tile 
-        td = bot.currentLocation.directionTo(directPath[currentMove]);
-        tt = bot.rc.senseTerrainTile(directPath[currentMove]).getType();
+        // Check and see if we can actually move to the next direct tile 
+        td = bot.currentLocation.directionTo(target);
+        attMove = bot.currentLocation.add(td);
+        tt = bot.rc.senseTerrainTile(attMove).getType();
 
         if(td == Direction.OMNI)
             Debugger.debug_print("We're here.");
@@ -163,45 +144,48 @@ public class Movement {
         // If this is the first time through, set the direction of the object we're following
         // and pick a way to go around it.
         if(moveType != Status.OBJECT) {
-            dToObstacle = bot.currentLocation.directionTo(directPath[currentMove]);
+            dToObstacle = bot.currentLocation.directionTo(attMove);
+            td = dToObstacle;
             moveType = Status.OBJECT;
             Debugger.debug_print("dToObstacle: " + dToObstacle.name());
 
-            td = dToObstacle.rotateLeft();
-            tt = bot.rc.senseTerrainTile(bot.currentLocation.add(td)).getType();
-
             // Find a direction that avoids what's in front of us
-            while(true) {
+            do {
+                td = td.rotateLeft();
+                tt = bot.rc.senseTerrainTile(bot.currentLocation.add(td)).getType();
+
                 Debugger.debug_print("Does " + td.name() + " work?");
+
                 if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(td)) {
-                    Debugger.debug_print("YES!"); avoidanceDir = td;
+                    Debugger.debug_print("YES!");
+                    avoidanceDir = td;
                     Debugger.debug_print("avoidanceDir: " + avoidanceDir.name());
 
-                    // Fudge the dToObstacle to optimize when we hit a corner.
+                    // Fudge dToObstacle to optimize when we get to an edge of an object
                     dToObstacle = uglyPOS();
                     makeMoveOrFace(avoidanceDir);
                     break;
                 }
 
                 Debugger.debug_print("NO!");
-
-                td = td.rotateLeft();
-                tt = bot.rc.senseTerrainTile(bot.currentLocation.add(td)).getType();
-            }
+            } while(true);
         }
 
         // We already have an avoidance direction.
         else {
-            // If we can finally move to our obstacle direction, do it. Recalculate our direct path
-            // and move along it.
+            // If we can finally move to our obstacle direction, do it.
             tt = bot.rc.senseTerrainTile(bot.currentLocation.add(dToObstacle)).getType();
             if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(dToObstacle)) {
-                Debugger.debug_print("We can move towards our target! Gen'ing a new path :)");
-                bot.movement = new Movement(bot, bot.currentLocation.add(dToObstacle), target);
+                Debugger.debug_print("We can move towards our target! :)");
+                bypassObstacle = true;          // Hack to force us to make the move next turn so we don't get stuck in a loop.
+                moveType = Status.PATH;
+
+                makeMoveOrFace(dToObstacle);
+
                 return;
             }
 
-            // Ok, we can't move directly towards our object yet, make another avoidance move
+            // Ok, we can't move directly towards our objective yet, make another avoidance move
             tt = bot.rc.senseTerrainTile(bot.currentLocation.add(bot.currentDirection)).getType();
             if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(dToObstacle)) {
                 makeMoveOrFace(bot.currentDirection);
@@ -261,19 +245,5 @@ public class Movement {
 
     private void doFollowUnit() {
         Debugger.debug_print("There's another idiot in my way. KILL IT WITH FIRE!");
-    }
-
-    private void crunchDirectPath() {
-        Debugger.debug_print("Creating path from " + from + " to: " + target);
-        directPath = new MapLocation[MAXPATHLEN];
-        MapLocation curr = from;
-
-        while(!curr.equals(target)) {
-            directPath[moves++] = curr;
-            curr = curr.add(curr.directionTo(target));
-        }
-
-        // Don't forget the last move
-        directPath[moves++] = curr;
     }
 }
