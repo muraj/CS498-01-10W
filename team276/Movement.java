@@ -27,8 +27,6 @@ public class Movement {
     }
 
     private void moveForward() throws Exception {
-        Debugger.debug_print("Moving forward to: " + bot.currentLocation.add(bot.currentDirection));
-
         // Safety first! Do some checks to make sure we can actually queue up this move without
         // blowing ourself up.
         if(bot.rc.canMove(bot.currentDirection) && (bot.rc.getRoundsUntilMovementIdle() == 0))
@@ -41,8 +39,6 @@ public class Movement {
     }
 
     private void setDirection(Direction dir) throws Exception {
-        Debugger.debug_print("Setting direction to: " + dir.name());
-
         // Make sure we don't somehow already have a move queued.
         if(bot.rc.getRoundsUntilMovementIdle() == 0)
             bot.rc.setDirection(dir);
@@ -53,20 +49,15 @@ public class Movement {
     }
 
     private void initCommon(Bot bot, MapLocation target) {
-        Debugger.debug_print("New movement to: " + target);
         this.bot            = bot;
         this.target         = target;
         this.moveType       = Status.PATH;
         this.bypassObstacle = false;
-
-        Debugger.debug_print("initCommon(): CL " + bot.currentLocation + " target: " + target);
     }
 
     // move() -- If this returns false, we have no more moves to make. True otherwise
     public boolean move() throws Exception {
-        Debugger.debug_print("move(): CL " + bot.currentLocation + " target: " + target);
         if(bot.currentLocation.equals(target)) {
-            Debugger.debug_print("We're here! Get the hell out of the bus!");
             target          = null;
             moveType        = null;
             bot.bp();
@@ -92,18 +83,15 @@ public class Movement {
 
     private void makeMoveOrFace(Direction dir) throws Exception {
         if(bot.currentDirection != dir) {
-            Debugger.debug_print("We're not facing the right way! Fix it.");
             setDirection(dir);
         }
 
         else {
-            Debugger.debug_print("We appear to be facing the correct direction. Do the move.");
             moveForward();
         }
     }
 
     private void doFollowPath() throws Exception {
-        Debugger.debug_print("Following Path...");
         Direction td;
         TerrainTile.TerrainType tt;
 
@@ -112,32 +100,25 @@ public class Movement {
         attMove = bot.currentLocation.add(td);
         tt = bot.rc.senseTerrainTile(attMove).getType();
 
-        if(td == Direction.OMNI)
-            Debugger.debug_print("We're here.");
-
         // FIXME FIXME FIXME
         // This next check does land too, which really isn't nessecary. This is only to debug our
         // current pathing approach on archons to make sure it'll work for land units.
         if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(td)) {
-            Debugger.debug_print("This tile is open and movable");
             makeMoveOrFace(td);
         } 
         
         else {
             if(tt != TerrainTile.TerrainType.LAND) {
-                Debugger.debug_print("The tile IS NOT land");
                 doFollowObject();
             }
 
             else {
-                Debugger.debug_print("There's probably another bot in our way.");
                 doFollowUnit();
             }
         }
     }
 
     private void doFollowObject() throws Exception {
-        Debugger.debug_print("There's an object in the way. Attempting to find a way around it.");
         TerrainTile.TerrainType tt;
         Direction td;
 
@@ -147,26 +128,20 @@ public class Movement {
             dToObstacle = bot.currentLocation.directionTo(attMove);
             td = dToObstacle;
             moveType = Status.OBJECT;
-            Debugger.debug_print("dToObstacle: " + dToObstacle.name());
 
             // Find a direction that avoids what's in front of us
             do {
                 td = td.rotateLeft();
                 tt = bot.rc.senseTerrainTile(bot.currentLocation.add(td)).getType();
 
-                Debugger.debug_print("Does " + td.name() + " work?");
-
                 if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(td)) {
-                    Debugger.debug_print("YES!"); avoidanceDir = td;
-                    Debugger.debug_print("avoidanceDir: " + avoidanceDir.name());
+                    avoidanceDir = td;
 
                     // Fudge dToObstacle to optimize when we get to an edge of an object
                     dToObstacle = uglyPOS();
                     makeMoveOrFace(avoidanceDir);
                     break;
                 }
-
-                Debugger.debug_print("NO!");
             } while(true);
         }
 
@@ -175,7 +150,6 @@ public class Movement {
             // If we can finally move to our obstacle direction, do it.
             tt = bot.rc.senseTerrainTile(bot.currentLocation.add(dToObstacle)).getType();
             if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(dToObstacle)) {
-                Debugger.debug_print("We can move towards our target! :)");
                 bypassObstacle = true;          // Hack to force us to make the move next turn so we don't get stuck in a loop.
                 moveType = Status.PATH;
 
