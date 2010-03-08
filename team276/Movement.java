@@ -44,7 +44,15 @@ public class Movement {
         if(moveType != Status.OBJECT)
             moves++;
 
-        bot.rc.moveForward();
+        // Safety first! Do some checks to make sure we can actually queue up this move without
+        // blowing ourself up.
+        if(bot.rc.canMove(bot.currentDirection) && (bot.rc.getRoundsUntilMovementIdle() == 0))
+            bot.rc.moveForward();
+
+        else {
+            Debugger.debug_print("YOUR CODE FUCKED UP!");
+            bot.bp();
+        }
     }
 
     private void setDirection(Direction dir) throws Exception {
