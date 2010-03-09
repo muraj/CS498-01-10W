@@ -8,7 +8,6 @@ public abstract class Bot {
     protected final int id;
     protected int bcCounterStart;
     /* Swarming non-constant constants */
-    protected double SEPERATION, COHESION, ALIGNMENT, COLLISION, GOAL;    //Initalized per robot
     protected final int MAX_GROUP_SZ = 3;
 
     public Bot(RobotController rc, Team t) {
@@ -26,7 +25,7 @@ public abstract class Bot {
     public RobotController getRC() {
         return rc;
     }
-    public Direction flock() throws Exception {
+    public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL) throws Exception {
         int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2];
         MapLocation myloc = rc.getLocation();
         /* General swarm */

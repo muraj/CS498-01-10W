@@ -5,17 +5,12 @@ import battlecode.common.*;
 public class WoutBot extends Bot {
     public WoutBot(RobotController rc, Team t) {
         super(rc,t);
-        COHESION = 1.0;
-        SEPERATION = 1.0;
-        ALIGNMENT = 1.0;
-        COLLISION = 1.0;
-        GOAL = 1.0;
     }
 
     public void AI() throws Exception {
         while (true) {
             while (rc.isMovementActive() || rc.isAttackActive()) rc.yield();
-            Direction f = flock();
+            Direction f = flock(1, 1, 1, 1, 1);
             f = f == Direction.OMNI ? rc.getDirection() : f;
             if(!rc.canMove(f)){
                 if (rc.canMove(f.rotateLeft())) f=f.rotateLeft();
