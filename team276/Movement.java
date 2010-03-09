@@ -107,7 +107,6 @@ public class Movement {
         Direction td;
         TerrainTile.TerrainType tt;
 
-        // Check and see if we can actually move to the next direct tile 
         td = bot.currentLocation.directionTo(target);
         attMove = bot.currentLocation.add(td);
         tt = bot.rc.senseTerrainTile(attMove).getType();
@@ -115,6 +114,7 @@ public class Movement {
         if(td == Direction.OMNI)
             Debugger.debug_print("We're here.");
 
+        // Check and see if we can actually move to the next direct tile 
         // FIXME FIXME FIXME
         // This next check does land too, which really isn't nessecary. This is only to debug our
         // current pathing approach on archons to make sure it'll work for land units.
@@ -136,6 +136,119 @@ public class Movement {
         }
     }
 
+    private Direction calcAvoidanceMove(Direction dToObstacle) {
+        Direction td = dToObstacle;
+        Direction tld;
+        Direction trd;
+        Direction attempt;
+        Direction[] dirs = new Direction[7];            // Max of 7, 8 surrounding - 1 in front
+        TerrainTile.TerrainType tt;
+        MapLocation tml;
+        MapLocation[] mls = new MapLocation[7];
+        int pms = 0;
+
+/*
+        // Get all of the possible moves
+        for(int i = 0; i < 7; i++) {
+            td = td.rotateLeft();
+            tml = bot.currentLocation.add(td);
+            tt = bot.rc.senseTerrainTile(tml).getType();
+
+            Debugger.debug_print("Does " + td.name() + " work?");
+
+            if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(td)) {
+                Debugger.debug_print("YES!");
+                mls[pms] = tml;
+                dirs[pms++] = td;
+            } else {
+                Debugger.debug_print("NO!");
+            }
+        }
+
+        Debugger.debug_print("possibleh moves");
+        for(int i = 0; i < pms; i++)
+            Debugger.debug_print("WOO " + dirs[i].name() + " " + mls[i]);
+
+        // If we're coming at the object at an angle, try to continue in sameish
+        // direction.
+        // FIXME: This is kinda ugly...
+        switch(dToObstacle) {
+            case NORTH_EAST: return Direction.EAST;
+        }
+
+        return dirs[0];
+*/
+    
+        // If 45* to the left works, take it.
+        tld = td.rotateLeft();
+        tml = bot.currentLocation.add(tld);
+        tt = bot.rc.senseTerrainTile(tml).getType();
+        Debugger.debug_print("Does " + tld.name() + " work?");
+
+        if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(tld))
+            return tld;
+        else
+            Debugger.debug_print("NO!");
+
+        // If 45* to the right works, take it.
+        trd = td.rotateRight();
+        tml = bot.currentLocation.add(trd);
+        tt = bot.rc.senseTerrainTile(tml).getType();
+        Debugger.debug_print("Does " + trd.name() + " work?");
+
+        if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(trd))
+            return trd;
+        else
+            Debugger.debug_print("NO!");
+
+        // If 90* to the left works, take it.
+        tld = tld.rotateLeft();
+        tml = bot.currentLocation.add(tld);
+        tt = bot.rc.senseTerrainTile(tml).getType();
+        Debugger.debug_print("Does " + tld.name() + " work?");
+
+        if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(tld))
+            return tld;
+        else
+            Debugger.debug_print("NO!");
+
+        // If 90* to the right works, take it.
+        trd = trd.rotateRight();
+        tml = bot.currentLocation.add(trd);
+        tt = bot.rc.senseTerrainTile(tml).getType();
+        Debugger.debug_print("Does " + trd.name() + " work?");
+
+        if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(trd))
+            return trd;
+        else
+            Debugger.debug_print("NO!");
+
+        // If 135* to the left works, take it.
+        tld = tld.rotateLeft();
+        tml = bot.currentLocation.add(tld);
+        tt = bot.rc.senseTerrainTile(tml).getType();
+        Debugger.debug_print("Does " + tld.name() + " work?");
+
+        if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(tld))
+            return tld;
+        else
+            Debugger.debug_print("NO!");
+
+        // If 135* to the right works, take it.
+        trd = trd.rotateRight();
+        tml = bot.currentLocation.add(trd);
+        tt = bot.rc.senseTerrainTile(tml).getType();
+        Debugger.debug_print("Does " + trd.name() + " work?");
+
+        if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(trd))
+            return trd;
+        else
+            Debugger.debug_print("NO!");
+
+        return null;
+
+     }
+
     private void doFollowObject() throws Exception {
         Debugger.debug_print("There's an object in the way. Attempting to find a way around it.");
         TerrainTile.TerrainType tt;
@@ -144,39 +257,28 @@ public class Movement {
         // If this is the first time through, set the direction of the object we're following
         // and pick a way to go around it.
         if(moveType != Status.OBJECT) {
+            moveType = Status.OBJECT;
+
             dToObstacle = bot.currentLocation.directionTo(attMove);
             td = dToObstacle;
-            moveType = Status.OBJECT;
             Debugger.debug_print("dToObstacle: " + dToObstacle.name());
 
-            // Find a direction that avoids what's in front of us
-            do {
-                td = td.rotateLeft();
-                tt = bot.rc.senseTerrainTile(bot.currentLocation.add(td)).getType();
+            avoidanceDir = calcAvoidanceMove(dToObstacle);
+            Debugger.debug_print("avoidanceDir: " + avoidanceDir.name());
 
-                Debugger.debug_print("Does " + td.name() + " work?");
-
-                if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(td)) {
-                    Debugger.debug_print("YES!");
-                    avoidanceDir = td;
-                    Debugger.debug_print("avoidanceDir: " + avoidanceDir.name());
-
-                    // Fudge dToObstacle to optimize when we get to an edge of an object
-                    dToObstacle = uglyPOS();
-                    makeMoveOrFace(avoidanceDir);
-                    break;
-                }
-
-                Debugger.debug_print("NO!");
-            } while(true);
+            // Fudge dToObstacle to optimize when we get to an edge of an object
+            //dToObstacle = uglyPOS();
+            makeMoveOrFace(avoidanceDir);
         }
 
         // We already have an avoidance direction.
         else {
+            Debugger.debug_print("dToObstacle: " + dToObstacle.name());
+
             // If we can finally move to our obstacle direction, do it.
             tt = bot.rc.senseTerrainTile(bot.currentLocation.add(dToObstacle)).getType();
             if(tt == TerrainTile.TerrainType.LAND && bot.rc.canMove(dToObstacle)) {
-                Debugger.debug_print("We can move towards our target! :)");
+                Debugger.debug_print("We can move towards our obstacle direction :)");
                 bypassObstacle = true;          // Hack to force us to make the move next turn so we don't get stuck in a loop.
                 moveType = Status.PATH;
 
@@ -193,7 +295,9 @@ public class Movement {
 
             // We've hit another object. Avoid this new one, also.
             else {
+                Debugger.debug_print("We've hit another obstacle, captain!");
                 moveType = Status.PATH;
+                dToObstacle = bot.currentDirection;
                 doFollowObject();
             }
         }
