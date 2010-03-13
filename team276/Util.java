@@ -9,23 +9,25 @@ public class Util {
         return zero.directionTo(new MapLocation(dx, dy));
     }
     /* Message Utility Functions */
-    public static class MessageComparator implements Comparator<Message> {
-        public int compare(Message m1, Message m2) {
+    public static class MessageComparator implements Comparator<ParsedMsg> {
+        public int compare(ParsedMsg m1, ParsedMsg m2) {
             // retval < 0 => m1 is bigger, retval == 0 => equal
             return m1.getNumBytes() - m2.getNumBytes();
         }
     }
 }
+enum MSGTYPE {
+    NONE(0), BEACON(1), ATTACK(2);
+    public final int value;
+    MSGTYPE(int val) { value = val; }
+}
 class ParsedMsg {
     protected Message m;
-    public static final int TYPE = 0;
+    public static int INT_SZ = 3;
     public static final int INIT_TTL = 10;
-    public static final int INT_SZ = 3;
     public ParsedMsg(Message pm) throws Exception {
         if (chksum(pm) != pm.ints[0])
             throw new Exception("CHKSUM not valid");
-        if (pm.ints[2] != TYPE)
-            throw new Exception("Wrong Type");
         this.m = pm; //May need to do a deep copy, not sure.
     }
     public ParsedMsg(int sz, int type) {
@@ -62,10 +64,13 @@ class ParsedMsg {
         }
         return ret ^ m.getNumBytes();   //Not sure if needed.
     }
+    public final int getNumBytes() {
+        return m.getNumBytes();
+    }
+    public MSGTYPE type() { return MSGTYPE.NONE; }
 }
 class Beacon extends ParsedMsg {
-    public static final int TYPE = 1;
-    public static final int INT_SZ = 24;
+    public static int INT_SZ = 24;
     public static final int LOCX = 15;
     public static final int LOCY = LOCX + 1;
     public static final int ROBOTYPE = 23;
@@ -73,7 +78,7 @@ class Beacon extends ParsedMsg {
         super(pm);
     }
     public Beacon(RobotInfo ri) {
-        super(INT_SZ, TYPE);
+        super(INT_SZ, MSGTYPE.BEACON.value);
         MapLocation loc = ri.location;
         m.ints[LOCX] = loc.getX();
         m.ints[LOCY] = loc.getY();
@@ -85,4 +90,5 @@ class Beacon extends ParsedMsg {
     public final RobotType robottype() {
         return RobotType.values()[m.ints[ROBOTYPE]];
     }
+    public MSGTYPE type() { return MSGTYPE.BEACON; }
 }

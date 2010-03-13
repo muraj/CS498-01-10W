@@ -11,9 +11,16 @@ public class ArchonBot extends Bot {
         Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
         b.send(rc);
         while (true) {
+            processMsgs();
+            while(!msgQueue.isEmpty()){
+                ParsedMsg m = msgQueue.poll();
+                switch(m.type()){
+                case BEACON:
+                    Debugger.debug_Print(""+((Beacon)m).location());
+                    break;
+                }
+            }
             rc.yield();
-            //Util.process_msgs();
-            //Debugger.debug_print("The top one:"+pqueue.poll());
         }
     }
 }
