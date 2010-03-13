@@ -70,11 +70,11 @@ public abstract class Bot {
                 glen = tdist;
             }
         }
-        if (rc.canSenseSquare(leader)) {
+        if (leader != null && rc.canSenseSquare(leader)) {
             Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
             goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
             goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
-        } else {
+        } else if (leader != null) {
             goal[0] = leader.getX() - myloc.getX();
             goal[1] = leader.getY() - myloc.getY();
         }
