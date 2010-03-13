@@ -8,8 +8,12 @@ public class ArchonBot extends Bot {
     }
 
     public void AI() throws Exception {
+        Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
+        b.send(rc);
         while (true) {
             rc.yield();
+            //Util.process_msgs();
+            //Debugger.debug_print("The top one:"+pqueue.poll());
         }
     }
 }

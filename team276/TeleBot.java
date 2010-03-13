@@ -9,7 +9,7 @@ public class TeleBot extends Bot {
 
     public void AI() throws Exception {
         while (true) {
-            Debugger.debugPrint("I'm a Tele!");
+            Debugger.debug_Print("I'm a Tele!");
             rc.yield();
         }
     }

@@ -45,7 +45,7 @@ public class RobotPlayer implements Runnable {
             e.printStackTrace();
             b.getRC().breakpoint(); //Break at this round.  We shouldn't lose bots
         }
-        Debugger.debugPrintTotalBCUsed();
+        Debugger.debug_PrintTotalBCUsed();
         b.yield();  //Should never get here.
     }
 }

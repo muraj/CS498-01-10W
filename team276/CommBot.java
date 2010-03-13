@@ -9,7 +9,7 @@ public class CommBot extends Bot {
 
     public void AI() throws Exception {
         while (true) {
-            Debugger.debugPrint("I'm a Comm!");
+            Debugger.debug_Print("I'm a Comm!");
             rc.yield();
         }
     }
