@@ -2,6 +2,7 @@ package team276;
 
 import battlecode.common.*;
 import java.util.Comparator;
+import java.lang.Object;
 
 public class Util {
     private final static MapLocation zero = new MapLocation(0,0);
@@ -21,13 +22,13 @@ enum MSGTYPE {
     public final int value;
     MSGTYPE(int val) { value = val; }
 }
-class ParsedMsg {
+class ParsedMsg extends Object{
     protected Message m;
     public static int INT_SZ = 3;
     public static final int INIT_TTL = 10;
     public ParsedMsg(Message pm) throws Exception {
-        if (chksum(pm) != pm.ints[0])
-            throw new Exception("CHKSUM not valid");
+        //if (chksum(pm) != pm.ints[0])
+        //    throw new Exception("CHKSUM not valid");
         this.m = pm; //May need to do a deep copy, not sure.
     }
     public ParsedMsg(int sz, int type) {
@@ -48,21 +49,8 @@ class ParsedMsg {
         return;
     }
     private static final int CHKSEED = 0x5B125AB;  //Some random starting value
-    private static final int chksum(Message m) {
-        int ret = CHKSEED;
-        if (m.strings != null) {
-            for (int i=0; i<m.strings.length; i++) {
-                if (m.strings[i] == null) continue;
-                for (int j=0; j<m.strings[i].length(); j++)
-                    ret ^= m.strings[i].charAt(j); //Not a 'good' way to do this.
-            }
-        }
-        if (m.ints != null) {
-            for (int i=1; i<m.ints.length; i++) {   //Start at one to skip the initial chksum number
-                ret ^= m.ints[i];
-            }
-        }
-        return ret ^ m.getNumBytes();   //Not sure if needed.
+    public static final int chksum(Message m) {
+        return CHKSEED ^ m.getNumBytes();
     }
     public final int getNumBytes() {
         return m.getNumBytes();
