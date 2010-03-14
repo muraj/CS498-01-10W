@@ -5,9 +5,9 @@ import java.util.Comparator;
 import java.lang.Object;
 
 public class Util {
-    private final static MapLocation zero = new MapLocation(0,0);
+    public final static MapLocation ZERO = new MapLocation(0,0);
     public static Direction coordToDirection(int dx, int dy) {
-        return zero.directionTo(new MapLocation(dx, dy));
+        return ZERO.directionTo(new MapLocation(dx, dy));
     }
     /* Message Utility Functions */
     public static class MessageComparator implements Comparator<ParsedMsg> {
@@ -32,7 +32,7 @@ class ParsedMsg extends Object{
         this.m = pm; //May need to do a deep copy, not sure.
     }
     public ParsedMsg(int sz, int type) {
-        Debugger.debug_Print(""+sz);
+        Debugger.debug_print(""+sz);
         m = new Message();
         m.ints = new int[sz];
         m.ints[1] = INIT_TTL;
