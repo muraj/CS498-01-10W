@@ -6,31 +6,30 @@ public class RobotPlayer implements Runnable {
     private Bot b;
 
     public RobotPlayer(RobotController rc) throws Exception {
-        Team t = rc.getTeam();
         switch (rc.getRobotType()) {
         case ARCHON:
-            b = new ArchonBot(rc,t);
+            b = new ArchonBot(rc);
             break;
         case AURA:
-            b = new AuraBot(rc,t);
+            b = new AuraBot(rc);
             break;
         case CHAINER:
-            b = new ChainerBot(rc,t);
+            b = new ChainerBot(rc);
             break;
         case COMM:
-            b = new CommBot(rc,t);
+            b = new CommBot(rc);
             break;
         case SOLDIER:
-            b = new SoldierBot(rc,t);
+            b = new SoldierBot(rc);
             break;
         case TELEPORTER:
-            b = new TeleBot(rc,t);
+            b = new TeleBot(rc);
             break;
         case TURRET:
-            b = new TurretBot(rc,t);
+            b = new TurretBot(rc);
             break;
         case WOUT:
-            b = new WoutBot(rc,t);
+            b = new WoutBot(rc);
             break;
         default:
             throw new Exception("Robot Type not supported yet.");

@@ -3,8 +3,8 @@ package team276;
 import battlecode.common.*;
 
 public class SoldierBot extends Bot {
-    public SoldierBot(RobotController rc, Team t) {
-        super(rc, t);
+    public SoldierBot(RobotController rc) throws Exception {
+        super(rc);
     }
 
     public void AI() throws Exception {

@@ -4,16 +4,14 @@ import battlecode.common.*;
 
 public abstract class Bot {
     protected final RobotController rc;
-    protected final Team team;
-    protected final int id;
+    protected final Robot self;
+    protected RobotInfo status;
     protected int bcCounterStart;
-    protected MapLocation currentLocation;
 
-    public Bot(RobotController rc, Team t) {
+    public Bot(RobotController rc) throws Exception {
         this.rc = rc;
-        this.id = rc.getRobot().getID();
-        this.team = t;
-        this.currentLocation = rc.getLocation();
+        this.self = rc.getRobot();
+        this.status = rc.senseRobotInfo(self);
     }
 
     public abstract void AI() throws Exception;
