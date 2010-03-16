@@ -5,9 +5,9 @@ import java.util.PriorityQueue;
 
 public abstract class Bot {
     protected final RobotController rc;
-    protected final Team team;
-    protected final int id;
     protected int bcCounterStart;
+    protected Team team;
+    protected int id;
     protected PriorityQueue<ParsedMsg> msgQueue;
     /* Swarming non-constant constants */
     protected final int MAX_GROUP_SZ = 3;
@@ -17,7 +17,9 @@ public abstract class Bot {
         this.team = t;
         this.msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
     }
-
+    public final void resetMsgQueue() {
+        msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
+    }
     public abstract void AI() throws Exception;
 
     public void yield() {
@@ -106,16 +108,12 @@ public abstract class Bot {
         Debugger.debug_print_counter(this);
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
     }
-    public final void processMsgs() throws Exception{
+    public final void processMsgs(int MAXBC) throws Exception{
         Message m;
+        int startbc = Clock.getBytecodeNum();
         while((m = rc.getNextMessage()) != null){
-            if (m.ints == null || m.ints.length < 3)
-                continue;
-            Debugger.debug_print("chksumming");
-            Debugger.debug_print_bc_used();
+            if (m.ints == null || m.ints.length < 3) continue;
             if (m.ints[0] != ParsedMsg.chksum(m)) continue;
-            Debugger.debug_print_bc_used();
-
             switch (MSGTYPE.values()[m.ints[2]]) {
             case BEACON:
                 msgQueue.add(new Beacon(m));
@@ -124,7 +122,12 @@ public abstract class Bot {
                 //msgQueue.add(new Attack(m));
                 break;
             }
+            if (Clock.getBytecodeNum() - startbc >= MAXBC) {
+                Debugger.debug_print("OMG WE HIT THE BC BARRIER");
+                Debugger.debug_print(""+(Clock.getBytecodeNum() - startbc));
+                break;
+            }
         }
-        rc.getAllMessages();    //Clear global queue
+        //rc.getAllMessages();    //Clear global queue
     }
 }

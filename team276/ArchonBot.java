@@ -14,17 +14,24 @@ public class ArchonBot extends Bot {
         Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
         b.send(rc);
         while (true) {
-            processMsgs();
-            rc.setIndicatorString(0,"Queue: "+msgQueue.size());
-            while(!msgQueue.isEmpty()){
-                ParsedMsg m = msgQueue.poll();
-                switch(m.type()){
-                case BEACON:
-                    Debugger.debug_print(""+((Beacon)m).location());
-                    break;
+            while (rc.isMovementActive()){
+                processMsgs(10000);
+                rc.setIndicatorString(1,"Queue: "+msgQueue.size());
+                resetMsgQueue();
+                /*int startbc = Clock.getBytecodeNum();
+                while(!msgQueue.isEmpty()){
+                    ParsedMsg m = msgQueue.poll();
+                    switch(m.type()){
+                    case BEACON:
+                        //Debugger.debug_print(""+((Beacon)m).location());
+                        break;
+                    }
                 }
+                rc.setIndicatorString(0,"Clock: "+(Clock.getBytecodeNum()-startbc));*/
+                rc.yield();
             }
-            while (rc.isMovementActive()) rc.yield();
+            processMsgs(10000);
+            rc.setIndicatorString(1,"Queue: "+msgQueue.size());
             Direction dir = rc.getDirection();
             MapLocation loc = rc.getLocation();
             MapLocation ahead = loc.add(dir);
@@ -32,9 +39,9 @@ public class ArchonBot extends Bot {
                 Robot r = rc.senseGroundRobotAtLocation(ahead);
                 if (r == null) {
                     if (rc.getEnergonLevel() > RobotType.WOUT.spawnCost()+MINIMUM_ENERGY_TO_SPAWN) {
-                        rc.spawn(RobotType.WOUT);
-                        rc.yield();
-                        continue;
+                         rc.spawn(RobotType.WOUT);
+                         rc.yield();
+                         continue;
                     }
                 } else {
                     RobotInfo ri = rc.senseRobotInfo(r);
