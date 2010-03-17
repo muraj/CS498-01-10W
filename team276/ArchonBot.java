@@ -14,28 +14,17 @@ public class ArchonBot extends Bot {
         Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
         b.send(rc);
         while (true) {
-            while (rc.isMovementActive()){
-                processMsgs(10000);
-                rc.setIndicatorString(1,"Queue: "+msgQueue.size());
-                resetMsgQueue();
-                /*int startbc = Clock.getBytecodeNum();
-                while(!msgQueue.isEmpty()){
-                    ParsedMsg m = msgQueue.poll();
-                    switch(m.type()){
-                    case BEACON:
-                        //Debugger.debug_print(""+((Beacon)m).location());
-                        break;
-                    }
-                }
-                rc.setIndicatorString(0,"Clock: "+(Clock.getBytecodeNum()-startbc));*/
+            if (rc.isMovementActive()){	//While on movement cooldown, crunch on compute AI <- Multiplexing!
+                processMsgs(1000);
+				rc.setIndicatorString(0,"QUEUE: "+msgQueue.size());
+                resetMsgQueue();	//Clear the local queue
                 rc.yield();
+				continue;
             }
-            processMsgs(10000);
-            rc.setIndicatorString(1,"Queue: "+msgQueue.size());
             Direction dir = rc.getDirection();
             MapLocation loc = rc.getLocation();
             MapLocation ahead = loc.add(dir);
-            if (loc.isAdjacentTo(ahead) && rc.senseTerrainTile(ahead).getType() == TerrainTile.TerrainType.LAND) {
+            if (rc.senseTerrainTile(ahead).getType() == TerrainTile.TerrainType.LAND) {
                 Robot r = rc.senseGroundRobotAtLocation(ahead);
                 if (r == null) {
                     if (rc.getEnergonLevel() > RobotType.WOUT.spawnCost()+MINIMUM_ENERGY_TO_SPAWN) {
@@ -55,7 +44,6 @@ public class ArchonBot extends Bot {
             }
             if (rc.canMove(rc.getDirection())) rc.moveForward();
             else rc.setDirection(dir.rotateRight());
-            Debugger.debug_print_total_bc_used();
             rc.yield();
         }
     }

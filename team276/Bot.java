@@ -34,9 +34,6 @@ public abstract class Bot {
         MapLocation myloc = rc.getLocation();
         /* General swarm */
         Robot[] rl = rc.senseNearbyGroundRobots();
-        Debugger.debug_print("Gathering rules");
-        Debugger.debug_print_bc_used();
-        Debugger.debug_set_counter(this);
         int c = 0;
         for (Robot r : rl) {
             if (c > MAX_GROUP_SZ) break;    //Try to limit bytecodes.
@@ -48,55 +45,47 @@ public abstract class Bot {
             align[0]+=ri.directionFacing.dx;
             align[1]+=ri.directionFacing.dy;
         }
-        Debugger.debug_print_counter(this);
         /* COLLISION GOAL */
-        Debugger.debug_print("Collision Rule");
-        Debugger.debug_set_counter(this);
-        for (Direction d : Direction.values()) {
-            if (d == Direction.OMNI || d == Direction.NONE) continue;
-            TerrainTile t = rc.senseTerrainTile(myloc.add(d));
-            if (t != null && t.getType() != TerrainTile.TerrainType.LAND) {
-                collision[0] -= d.dx;
-                collision[1] -= d.dy;
-            }
-        }
-        Debugger.debug_print_counter(this);
-        Debugger.debug_print_bc_used();
+		if(COLLISION != 0) {
+			for (Direction d : Direction.values()) {
+				if (d == Direction.OMNI || d == Direction.NONE) continue;
+				TerrainTile t = rc.senseTerrainTile(myloc.add(d));
+				if (t != null && t.getType() != TerrainTile.TerrainType.LAND) {
+					collision[0] -= d.dx;
+					collision[1] -= d.dy;
+				}
+			}
+		}
         /* LEADER GOAL */
-        MapLocation leader = null;
-        double glen = Double.MAX_VALUE;
-        Debugger.debug_print("Finding closest Archon");
-        Debugger.debug_set_counter(this);
-        for (MapLocation t : rc.senseAlliedArchons()) {
-            double tdist = myloc.distanceSquaredTo(t);
-            if (tdist < glen) {
-                leader = t;
-                glen = tdist;
-            }
-        }
-        if (leader != null && rc.canSenseSquare(leader)) {
-            Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
-            goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
-            goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
-        } else if (leader != null) {
-            goal[0] = leader.getX() - myloc.getX();
-            goal[1] = leader.getY() - myloc.getY();
-        }
-        Debugger.debug_print_bc_used();
-        Debugger.debug_print_counter(this);
+		if(GOAL != 0) {
+			MapLocation leader = null;
+			double glen = Double.MAX_VALUE;
+			for (MapLocation t : rc.senseAlliedArchons()) {
+				double tdist = myloc.distanceSquaredTo(t);
+				if (tdist < glen) {
+					leader = t;
+					glen = tdist;
+				}
+			}
+			if (leader != null && rc.canSenseSquare(leader)) {
+				Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
+				goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
+				goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
+			} else if (leader != null) {
+				goal[0] = leader.getX() - myloc.getX();
+				goal[1] = leader.getY() - myloc.getY();
+			}
+		}
         /* Calculate Vector lengths */
         double slen = Util.ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
         double alen = Util.ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
         double clen = Util.ZERO.distanceSquaredTo(new MapLocation(collision[0], collision[1]));
-        glen = Util.ZERO.distanceSquaredTo(new MapLocation(goal[0], goal[1]));
+        double glen = GOAL != 0 ? Math.sqrt(Util.ZERO.distanceSquaredTo(new MapLocation(goal[0], goal[1]))) : 1;
 
         slen = slen == 0 ? 1 : Math.sqrt(slen);    //Prevent divide by zero
         alen = alen == 0 ? 1 : Math.sqrt(alen);
         clen = clen == 0 ? 1 : Math.sqrt(clen);
-        glen = glen == 0 ? 1 : Math.sqrt(glen);
         /* Sum the vectors */
-        Debugger.debug_print("Applying rules");
-        Debugger.debug_set_counter(this);
         double outx = -seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
                       + align[0]*ALIGNMENT/alen
                       + collision[0]*COLLISION/clen
@@ -105,7 +94,6 @@ public abstract class Bot {
                       + align[1]*ALIGNMENT/alen
                       + collision[1]*COLLISION/clen
                       + goal[1]*GOAL/glen;
-        Debugger.debug_print_counter(this);
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
     }
     public final void processMsgs(int MAXBC) throws Exception{
@@ -122,12 +110,8 @@ public abstract class Bot {
                 //msgQueue.add(new Attack(m));
                 break;
             }
-            if (Clock.getBytecodeNum() - startbc >= MAXBC) {
-                Debugger.debug_print("OMG WE HIT THE BC BARRIER");
-                Debugger.debug_print(""+(Clock.getBytecodeNum() - startbc));
-                break;
-            }
+            if (Clock.getBytecodeNum() - startbc >= MAXBC) break;
         }
-        //rc.getAllMessages();    //Clear global queue
+        rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
     }
 }

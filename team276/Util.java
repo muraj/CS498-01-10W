@@ -13,12 +13,16 @@ public class Util {
     public static class MessageComparator implements Comparator<ParsedMsg> {
         public int compare(ParsedMsg m1, ParsedMsg m2) {
             // retval < 0 => m1 is bigger, retval == 0 => equal
-            return m1.getNumBytes() - m2.getNumBytes();
+			int x = m1.type().value - m2.type().value;
+			if(x!=0) return x;	//Prioritize on type first
+			x = m1.ttl() - m2.ttl();
+			if(x!=0) return x;	//Then on Time-to-Live
+			return m1.getNumBytes() - m2.getNumBytes();	//Last but not least, by size
         }
     }
 }
 enum MSGTYPE {
-    NONE(0), BEACON(1), ATTACK(2);
+    BEACON(0), ATTACK(1), NONE(2);
     public final int value;
     MSGTYPE(int val) { value = val; }
 }
@@ -26,13 +30,15 @@ class ParsedMsg extends Object{
     protected Message m;
     public static int INT_SZ = 3;
     public static final int INIT_TTL = 10;
+	public static final int iCHKSUM = 0;
+	public static final int iTTL = iCHKSUM+1;
+	public static final int iTYPE = iCHKSUM+2;
     public ParsedMsg(Message pm) throws Exception {
         //if (chksum(pm) != pm.ints[0])
         //    throw new Exception("CHKSUM not valid");
         this.m = pm; //May need to do a deep copy, not sure.
     }
     public ParsedMsg(int sz, int type) {
-        Debugger.debug_print(""+sz);
         m = new Message();
         m.ints = new int[sz];
         m.ints[1] = INIT_TTL;
@@ -56,6 +62,7 @@ class ParsedMsg extends Object{
         return m.getNumBytes();
     }
     public MSGTYPE type() { return MSGTYPE.NONE; }
+	public final int ttl() { return m.ints[iTTL]; }
 }
 class Beacon extends ParsedMsg {
     public static int INT_SZ = 24;
