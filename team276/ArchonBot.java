@@ -27,8 +27,8 @@ public class ArchonBot extends Bot {
             if (rc.senseTerrainTile(ahead).getType() == TerrainTile.TerrainType.LAND) {
                 Robot r = rc.senseGroundRobotAtLocation(ahead);
                 if (r == null) {
-                    if (rc.getEnergonLevel() > RobotType.WOUT.spawnCost()+MINIMUM_ENERGY_TO_SPAWN) {
-                         rc.spawn(RobotType.WOUT);
+                    if (rc.getEnergonLevel() > RobotType.SOLDIER.spawnCost()+MINIMUM_ENERGY_TO_SPAWN) {
+                         rc.spawn(RobotType.SOLDIER);
                          rc.yield();
                          continue;
                     }
