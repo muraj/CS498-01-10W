@@ -11,33 +11,43 @@ public abstract class Bot {
 
     protected int bcCounterStart;
 
-    protected final RobotInfo alliedUnits[];
-    protected final RobotInfo enemyUnits[];
-    protected int nAlliedUnits;
-    protected int nEnemyUnits;
+    protected final RobotInfo alliedAir[];
+    protected final RobotInfo alliedGround[];
+    protected final RobotInfo enemyAir[];
+    protected final RobotInfo enemyGround[];
+    protected int nAlliedAir;
+    protected int nAlliedGround;
+    protected int nEnemyAir;
+    protected int nEnemyGround;
 
     public Bot(RobotController rc) throws Exception {
         this.rc = rc;
         this.self = rc.getRobot();
         this.status = rc.senseRobotInfo(self);
-        this.alliedUnits = new RobotInfo[MAX_BOTS_SCAN];
-        this.enemyUnits = new RobotInfo[MAX_BOTS_SCAN];
-        this.nAlliedUnits = 0;
-        this.nEnemyUnits = 0;
+        this.alliedAir = new RobotInfo[MAX_BOTS_SCAN];
+        this.alliedGround = new RobotInfo[MAX_BOTS_SCAN];
+        this.enemyAir = new RobotInfo[MAX_BOTS_SCAN];
+        this.enemyGround = new RobotInfo[MAX_BOTS_SCAN];
+        this.nAlliedAir = 0;
+        this.nAlliedGround = 0;
+        this.nEnemyAir = 0;
+        this.nEnemyGround = 0;
     }
 
     public abstract void AI() throws Exception;
 
     // Sense the nearby robots
-    // BC: 528 for 5, ~105 per bot
+    // BC: 534 for 5, ~106 per bot
     public final void senseNear() throws Exception {
         Robot[] airUnits;
         Robot[] groundUnits;
         RobotInfo tri;
         int i, len;
 
-        nAlliedUnits = 0;
-        nEnemyUnits = 0;
+        nAlliedAir = 0;
+        nAlliedGround = 0;
+        nEnemyAir = 0;
+        nEnemyGround = 0;
 
         // BC: 104 for 5, ~20 per bot for each call.
         airUnits = rc.senseNearbyAirRobots();
@@ -49,11 +59,11 @@ public abstract class Bot {
             tri = rc.senseRobotInfo(airUnits[i]);
 
             if(status.team.equals(tri.team))
-                alliedUnits[nAlliedUnits++] = tri;
+                alliedAir[nAlliedAir++] = tri;
 
             // The team of the bot could be neutral so we HAVE to do this check.
             else if(status.team.opponent().equals(tri.team))
-                enemyUnits[nEnemyUnits++] = tri;
+                enemyAir[nEnemyAir++] = tri;
         }
 
         len = groundUnits.length;
@@ -61,11 +71,11 @@ public abstract class Bot {
             tri = rc.senseRobotInfo(groundUnits[i]);
 
             if(status.team.equals(tri.team))
-                alliedUnits[nAlliedUnits++] = tri;
+                alliedGround[nAlliedGround++] = tri;
 
             // The team of the bot could be neutral so we HAVE to do this check.
             else if(status.team.opponent().equals(tri.team))
-                enemyUnits[nEnemyUnits++] = tri;
+                enemyGround[nEnemyGround++] = tri;
         }
     }
 }
