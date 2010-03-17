@@ -8,9 +8,9 @@ public class WoutBot extends Bot {
     }
     public void AI() throws Exception {
         while (true) {
-            if (rc.isMovementActive() || rc.isAttackActive()){	//Send messages while we're moving
-                Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
-                b.send(rc);
+            if (rc.isMovementActive() || rc.isAttackActive()){	//Do heavy stuff while we're moving
+                //Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
+                //b.send(rc);
                 rc.yield();
 				continue;
             }
