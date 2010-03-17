@@ -10,6 +10,8 @@ public class ArchonBot extends Bot {
     public void AI() throws Exception {
         while (true) {
             status = rc.senseRobotInfo(self);
+            senseNear();
+
             Debugger.debug_setCounter(this);
             Debugger.debug_print("I'm an Archon!");
             Debugger.debug_printEnergon(this.rc);
