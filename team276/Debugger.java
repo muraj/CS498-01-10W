@@ -1,6 +1,7 @@
 package team276;
 
-import battlecode.common.*;
+import battlecode.common.Clock;
+import battlecode.common.RobotController;
 
 public class Debugger {
     public static final void debug_print(String str) {
