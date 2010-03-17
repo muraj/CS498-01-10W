@@ -37,7 +37,7 @@ public abstract class Bot {
     public abstract void AI() throws Exception;
 
     // Sense the nearby robots
-    // BC: 534 for 5, ~106 per bot
+    // BC: 525 for 5, ~105 per bot
     public final void senseNear() throws Exception {
         Robot[] airUnits;
         Robot[] groundUnits;
@@ -53,9 +53,12 @@ public abstract class Bot {
         airUnits = rc.senseNearbyAirRobots();
         groundUnits = rc.senseNearbyGroundRobots();
 
-        // BC: 303 for 5, ~60 per bot for this loop
+        // BC: 291 for 5, ~58 per bot for this loop
         len = airUnits.length;
-        for(i = 0; i < len && i < MAX_BOTS_SCAN; i++) {
+        if(len > MAX_BOTS_SCAN)
+            len = MAX_BOTS_SCAN;
+
+        for(i = 0; i < len; i++) {
             tri = rc.senseRobotInfo(airUnits[i]);
 
             if(status.team.equals(tri.team))
@@ -66,14 +69,17 @@ public abstract class Bot {
                 enemyAir[nEnemyAir++] = tri;
         }
 
+        // Repeat for ground units.
         len = groundUnits.length;
-        for(i = 0; i < len && i < MAX_BOTS_SCAN; i++) {
+        if(len > MAX_BOTS_SCAN)
+            len = MAX_BOTS_SCAN;
+
+        for(i = 0; i < len; i++) {
             tri = rc.senseRobotInfo(groundUnits[i]);
 
             if(status.team.equals(tri.team))
                 alliedGround[nAlliedGround++] = tri;
 
-            // The team of the bot could be neutral so we HAVE to do this check.
             else if(status.team.opponent().equals(tri.team))
                 enemyGround[nEnemyGround++] = tri;
         }
