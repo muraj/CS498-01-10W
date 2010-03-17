@@ -19,8 +19,4 @@ public abstract class Bot {
     public void yield() {
         rc.yield();
     }
-
-    public RobotController getRC() {
-        return this.rc;
-    }
 }

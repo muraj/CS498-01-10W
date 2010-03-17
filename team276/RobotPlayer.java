@@ -42,9 +42,9 @@ public class RobotPlayer implements Runnable {
         } catch (Exception e) {
             System.out.println("!! Caught Exception !!");
             e.printStackTrace();
-            b.getRC().breakpoint(); //Break at this round.  We shouldn't lose bots
+            b.rc.breakpoint(); //Break at this round.  We shouldn't lose bots
         }
         Debugger.debug_printBCUsed();
-        b.yield();  //Should never get here.
+        b.rc.yield();  //Should never get here.
     }
 }
