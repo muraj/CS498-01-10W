@@ -15,7 +15,7 @@ public class Util {
             // retval < 0 => m1 is bigger, retval == 0 => equal
 			int x = m1.type().value - m2.type().value;
 			if(x!=0) return x;	//Prioritize on type first
-			x = m1.ttl() - m2.ttl();
+			x = m1.age() - m2.age();
 			if(x!=0) return x;	//Then on Time-to-Live
 			return m1.getNumBytes() - m2.getNumBytes();	//Last but not least, by size
         }
@@ -31,7 +31,7 @@ class ParsedMsg extends Object{
     public static int INT_SZ = 3;
     public static final int INIT_TTL = 10;
 	public static final int iCHKSUM = 0;
-	public static final int iTTL = iCHKSUM+1;
+	public static final int iRND = iCHKSUM+1;
 	public static final int iTYPE = iCHKSUM+2;
     public ParsedMsg(Message pm) throws Exception {
         //if (chksum(pm) != pm.ints[0])
@@ -41,7 +41,7 @@ class ParsedMsg extends Object{
     public ParsedMsg(int sz, int type) {
         m = new Message();
         m.ints = new int[sz];
-        m.ints[1] = INIT_TTL;
+        m.ints[1] = Clock.getRoundNum();
         m.ints[2] = type;
     }
     public final void send(RobotController rc) throws Exception {
@@ -62,7 +62,7 @@ class ParsedMsg extends Object{
         return m.getNumBytes();
     }
     public MSGTYPE type() { return MSGTYPE.NONE; }
-	public final int ttl() { return m.ints[iTTL]; }
+	public final int age() { return Clock.getRoundNum() - m.ints[iRND]; }
 }
 class Beacon extends ParsedMsg {
     public static int INT_SZ = 24;
