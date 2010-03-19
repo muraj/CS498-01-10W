@@ -13,6 +13,7 @@ public class ArchonBot extends Bot {
         Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
         b.send(rc);
         while (true) {
+            rc.setIndicatorString(1,"Pos: "+rc.getLocation());
             if (rc.isMovementActive()) {	//While on movement cooldown, crunch on compute AI <- Multiplexing!
                 processMsgs(1000);
                 rc.setIndicatorString(0,"QUEUE: "+msgQueue.size());
@@ -26,8 +27,8 @@ public class ArchonBot extends Bot {
             if (rc.senseTerrainTile(ahead).getType() == TerrainTile.TerrainType.LAND) {
                 Robot r = rc.senseGroundRobotAtLocation(ahead);
                 if (r == null) {
-                    if (rc.getEnergonLevel() > RobotType.SOLDIER.spawnCost()+RobotType.SOLDIER.maxEnergon()+1) {
-                        rc.spawn(RobotType.SOLDIER);
+                    if (rc.getEnergonLevel() > RobotType.WOUT.spawnCost()+RobotType.WOUT.maxEnergon()+1) {
+                        rc.spawn(RobotType.WOUT);
                         rc.yield();
                         continue;
                     }
