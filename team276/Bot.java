@@ -10,14 +10,14 @@ public abstract class Bot {
     protected int bcCounterStart;
     protected PriorityQueue<ParsedMsg> msgQueue;
     protected final int MAX_GROUP_SZ = 3;
-    public Bot(RobotController rc) throws Exception{
+    public Bot(RobotController rc) throws Exception {
         this.rc = rc;
         this.self = rc.getRobot();
         this.status = rc.senseRobotInfo(self);
         this.msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
     }
     public final void resetMsgQueue() {
-        msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
+        msgQueue.clear();   //Cheaper to make a new one?
     }
     public abstract void AI() throws Exception;
 
@@ -45,36 +45,36 @@ public abstract class Bot {
             align[1]+=ri.directionFacing.dy;
         }
         /* COLLISION GOAL */
-		if(COLLISION != 0) {
-			for (Direction d : Direction.values()) {
-				if (d == Direction.OMNI || d == Direction.NONE) continue;
-				TerrainTile t = rc.senseTerrainTile(myloc.add(d));
-				if (t != null && t.getType() != TerrainTile.TerrainType.LAND) {
-					collision[0] -= d.dx;
-					collision[1] -= d.dy;
-				}
-			}
-		}
+        if (COLLISION != 0) {
+            for (Direction d : Direction.values()) {
+                if (d == Direction.OMNI || d == Direction.NONE) continue;
+                TerrainTile t = rc.senseTerrainTile(myloc.add(d));
+                if (t != null && t.getType() != TerrainTile.TerrainType.LAND) {
+                    collision[0] -= d.dx;
+                    collision[1] -= d.dy;
+                }
+            }
+        }
         /* LEADER GOAL */
-		if(GOAL != 0) {
-			MapLocation leader = null;
-			double glen = Double.MAX_VALUE;
-			for (MapLocation t : rc.senseAlliedArchons()) {
-				double tdist = myloc.distanceSquaredTo(t);
-				if (tdist < glen) {
-					leader = t;
-					glen = tdist;
-				}
-			}
-			if (leader != null && rc.canSenseSquare(leader)) {
-				Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
-				goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
-				goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
-			} else if (leader != null) {
-				goal[0] = leader.getX() - myloc.getX();
-				goal[1] = leader.getY() - myloc.getY();
-			}
-		}
+        if (GOAL != 0) {
+            MapLocation leader = null;
+            double glen = Double.MAX_VALUE;
+            for (MapLocation t : rc.senseAlliedArchons()) {
+                double tdist = myloc.distanceSquaredTo(t);
+                if (tdist < glen) {
+                    leader = t;
+                    glen = tdist;
+                }
+            }
+            if (leader != null && rc.canSenseSquare(leader)) {
+                Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
+                goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
+                goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
+            } else if (leader != null) {
+                goal[0] = leader.getX() - myloc.getX();
+                goal[1] = leader.getY() - myloc.getY();
+            }
+        }
         /* Calculate Vector lengths */
         double slen = Util.ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
         double alen = Util.ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
@@ -95,10 +95,10 @@ public abstract class Bot {
                       + goal[1]*GOAL/glen;
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
     }
-    public final void processMsgs(int MAXBC) throws Exception{
+    public final void processMsgs(int MAXBC) throws Exception {
         Message m;
         int startbc = Clock.getBytecodeNum();
-        while((m = rc.getNextMessage()) != null){
+        while ((m = rc.getNextMessage()) != null) {
             if (m.ints == null || m.ints.length < 3) continue;
             if (m.ints[0] != ParsedMsg.chksum(m)) continue;
             switch (MSGTYPE.values()[m.ints[2]]) {

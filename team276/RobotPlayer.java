@@ -6,29 +6,31 @@ public class RobotPlayer implements Runnable {
     private Bot b;
 
     public RobotPlayer(RobotController rc) throws Exception {
-		createBot(rc);
+        createBot(rc);
     }
-	public static final boolean DEBUG = true;
+    public static final boolean DEBUG = true;
     public void run() {
-		while(true){	//Just a safety net in case we screw up.
-			try {
-				b.AI();
-			} catch (Exception e) {		//We fucked up.
-				System.out.println("!! Caught Exception !!");
-				e.printStackTrace();
-				if(DEBUG) { b.getRC().breakpoint(); break; }	//Debugging, breakpoint, then kill the bot
-				else {
-					try {
-						createBot(b.getRC());	//If we're not debugging, 'save' the bot by resetting it.
-					}catch(Exception e2){
-						break;
-					}
-				}
-			}
-			b.yield();  //Should never get here.
-		}
+        while (true) {	//Just a safety net in case we screw up.
+            try {
+                b.AI();
+            } catch (Exception e) {		//We fucked up.
+                System.out.println("!! Caught Exception !!");
+                e.printStackTrace();
+                if (DEBUG) {
+                    b.getRC().breakpoint();    //Debugging, breakpoint, then kill the bot
+                    break;
+                } else {
+                    try {
+                        createBot(b.getRC());	//If we're not debugging, 'save' the bot by resetting it.
+                    } catch (Exception e2) {
+                        break;
+                    }
+                }
+            }
+            b.yield();  //Should never get here.
+        }
     }
-	private void createBot(RobotController rc) throws Exception {
+    private void createBot(RobotController rc) throws Exception {
         switch (rc.getRobotType()) {
         case ARCHON:
             b = new ArchonBot(rc);
@@ -57,5 +59,5 @@ public class RobotPlayer implements Runnable {
         default:
             throw new Exception("Robot Type not supported yet.");
         }
-	}
+    }
 }
