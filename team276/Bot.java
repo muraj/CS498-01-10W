@@ -85,11 +85,11 @@ public abstract class Bot {
         alen = alen == 0 ? 1 : Math.sqrt(alen);
         clen = clen == 0 ? 1 : Math.sqrt(clen);
         /* Sum the vectors */
-        double outx = -seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
+        double outx = seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
                       + align[0]*ALIGNMENT/alen
                       + collision[0]*COLLISION/clen
                       + goal[0]*GOAL/glen;
-        double outy = -seperation[1]/slen*(SEPERATION - COHESION)
+        double outy = seperation[1]/slen*(SEPERATION - COHESION)
                       + align[1]*ALIGNMENT/alen
                       + collision[1]*COLLISION/clen
                       + goal[1]*GOAL/glen;
