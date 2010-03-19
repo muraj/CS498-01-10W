@@ -20,6 +20,8 @@ public abstract class Bot {
     protected int nEnemyAir;
     protected int nEnemyGround;
 
+    public abstract void AI() throws Exception;
+
     public Bot(RobotController rc) throws Exception {
         this.rc = rc;
         this.self = rc.getRobot();
@@ -33,8 +35,6 @@ public abstract class Bot {
         this.nEnemyAir = 0;
         this.nEnemyGround = 0;
     }
-
-    public abstract void AI() throws Exception;
 
     // Sense the nearby robots
     // BC: 525 for 5, ~105 per bot
