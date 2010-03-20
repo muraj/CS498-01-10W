@@ -101,16 +101,19 @@ public abstract class Bot {
         while ((m = rc.getNextMessage()) != null) {
             if (m.ints == null || m.ints.length < 3) continue;
             if (m.ints[0] != ParsedMsg.chksum(m)) continue;
-            switch (MSGTYPE.values()[m.ints[2]]) {
+            switch (MSGTYPE.values()[m.ints[ParsedMsg.TYPE_I]]) {
             case BEACON:
-                msgQueue.add(new Beacon(m));
+                if(Clock.getRoundNum() - m.ints[ParsedMsg.AGE_I] < Beacon.MAX_AGE)
+                    msgQueue.add(new Beacon(m));
                 break;
             case ATTACK:
-                //msgQueue.add(new Attack(m));
+                if(Clock.getRoundNum() - m.ints[ParsedMsg.AGE_I] < Attack.MAX_AGE)
+                    msgQueue.add(new Attack(m));
                 break;
             }
             if (Clock.getBytecodeNum() - startbc >= MAXBC) break;
         }
+        if(!msgQueue.isEmpty()) msgQueue.peek().send(rc);   //Re-broadcast our highest priority... More logic
         rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
     }
 }

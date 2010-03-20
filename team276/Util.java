@@ -72,9 +72,9 @@ class ParsedMsg extends Object {
     protected Message m;
     public static int INT_SZ = 3;
     public static final int INIT_TTL = 10;
-    public static final int iCHKSUM = 0;
-    public static final int iRND = iCHKSUM+1;
-    public static final int iTYPE = iCHKSUM+2;
+    public static final int CHKSUM_I = 0;
+    public static final int AGE_I = CHKSUM_I+1;
+    public static final int TYPE_I = CHKSUM_I+2;
     public ParsedMsg(Message pm) throws Exception {
         //if (chksum(pm) != pm.ints[0])
         //    throw new Exception("CHKSUM not valid");
@@ -83,11 +83,11 @@ class ParsedMsg extends Object {
     public ParsedMsg(int sz, int type) {
         m = new Message();
         m.ints = new int[sz];
-        m.ints[1] = Clock.getRoundNum();
-        m.ints[2] = type;
+        m.ints[AGE_I] = Clock.getRoundNum();
+        m.ints[TYPE_I] = type;
     }
     public final void send(RobotController rc) throws Exception {
-        m.ints[0] = chksum(m);  //Compute chksum
+        m.ints[CHKSUM_I] = chksum(m);  //Compute chksum
         rc.broadcast(m);        //Broadcast it out.
     }
     private static final int CHKSEED = 0x5B125AB;  //Some random starting value
@@ -101,10 +101,11 @@ class ParsedMsg extends Object {
         return MSGTYPE.NONE;
     }
     public final int age() {
-        return Clock.getRoundNum() - m.ints[iRND];
+        return Clock.getRoundNum() - m.ints[AGE_I];
     }
 }
 class Beacon extends ParsedMsg {
+    public static final int MAX_AGE = 5;
     public static final int INT_SZ = Util.ROBOTINFO_SZ + 3;
     public static final int ROBOT_INFO_START = 3;
     public static RobotInfo robotInfo;  //Cache the RobotInfo object on first use
@@ -125,6 +126,7 @@ class Beacon extends ParsedMsg {
     }
 }
 class Attack extends ParsedMsg {
+    public static final int MAX_AGE = 5;
     public static final int INT_SZ = Util.ROBOTINFO_SZ + 3;
     public static final int ROBOT_INFO_START = 3;
     public static RobotInfo robotInfo;  //Cache the RobotInfo object on first use
