@@ -15,6 +15,7 @@ public abstract class Bot {
     protected final RobotInfo alliedGround[];
     protected final RobotInfo enemyAir[];
     protected final RobotInfo enemyGround[];
+    protected final RobotInfo highPriorityEnemy;
     protected int nAlliedAir;
     protected int nAlliedGround;
     protected int nEnemyAir;
@@ -30,6 +31,7 @@ public abstract class Bot {
         this.alliedGround = new RobotInfo[MAX_BOTS_SCAN];
         this.enemyAir = new RobotInfo[MAX_BOTS_SCAN];
         this.enemyGround = new RobotInfo[MAX_BOTS_SCAN];
+        this.highPriorityEnemy = null;
         this.nAlliedAir = 0;
         this.nAlliedGround = 0;
         this.nEnemyAir = 0;
@@ -64,8 +66,7 @@ public abstract class Bot {
             if(status.team.equals(tri.team))
                 alliedAir[nAlliedAir++] = tri;
 
-            // The team of the bot could be neutral so we HAVE to do this check.
-            else if(status.team.opponent().equals(tri.team))
+            else
                 enemyAir[nEnemyAir++] = tri;
         }
 
@@ -80,7 +81,7 @@ public abstract class Bot {
             if(status.team.equals(tri.team))
                 alliedGround[nAlliedGround++] = tri;
 
-            else if(status.team.opponent().equals(tri.team))
+            else
                 enemyGround[nEnemyGround++] = tri;
         }
     }
