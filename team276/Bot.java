@@ -130,15 +130,13 @@ public abstract class Bot {
         if (!rc.canAttackSquare(target.location) || rc.isAttackActive())
             return -1;
 
-        if (target.type == RobotType.ARCHON) {
-            if (rc.canAttackAir())
-                rc.attackAir(target.location);
-        } else {
-            if (rc.canAttackGround())
-                rc.attackGround(target.location);
-        }
+        if (target.type == RobotType.ARCHON && rc.canAttackAir())
+            rc.attackAir(target.location);
+        else if (rc.canAttackGround())
+            rc.attackGround(target.location);
+        else return -1; //Not an archon and can attack only air.
 
-        return status.type.attackDelay();
+        return status.type.attackDelay();   //Successful attack
     }
 }
 
