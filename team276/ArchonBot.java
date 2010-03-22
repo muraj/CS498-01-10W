@@ -14,6 +14,9 @@ public class ArchonBot extends Bot {
         Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
         b.send(rc);
         while (true) {
+            status = rc.senseRobotInfo(self);
+            senseNear();
+
             if (rc.isMovementActive()) {	//While on movement cooldown, crunch on compute AI <- Multiplexing!
                 processMsgs(1000);
                 rc.setIndicatorString(0,"QUEUE: "+msgQueue.size());
@@ -21,13 +24,13 @@ public class ArchonBot extends Bot {
                 rc.yield();
                 continue;
             }
-            Direction dir = rc.getDirection();
-            MapLocation loc = rc.getLocation();
+            Direction dir = status.directionFacing;
+            MapLocation loc = status.location;
             MapLocation ahead = loc.add(dir);
             if (rc.senseTerrainTile(ahead).getType() == TerrainTile.TerrainType.LAND) {
                 Robot r = rc.senseGroundRobotAtLocation(ahead);
                 if (r == null) {
-                    if (rc.getEnergonLevel() > RobotType.SOLDIER.spawnCost()+MINIMUM_ENERGY_TO_SPAWN) {
+                    if (status.energonLevel > RobotType.SOLDIER.spawnCost()+MINIMUM_ENERGY_TO_SPAWN) {
                         rc.spawn(RobotType.SOLDIER);
                         rc.yield();
                         continue;
@@ -35,14 +38,14 @@ public class ArchonBot extends Bot {
                 } else {
                     RobotInfo ri = rc.senseRobotInfo(r);
                     if (ri.team == status.team && ri.energonLevel < ri.type.maxEnergon()
-                            && rc.getEnergonLevel() > MINIMUM_ENERGY_TO_TRANSFER && !ri.type.isBuilding()) {
+                            && status.energonLevel > MINIMUM_ENERGY_TO_TRANSFER && !ri.type.isBuilding()) {
                         rc.transferUnitEnergon(UNITENERGY_TRANSFER,ahead,RobotLevel.ON_GROUND);
                         rc.yield();
                         continue;
                     }
                 }
             }
-            if (rc.canMove(rc.getDirection())) rc.moveForward();
+            if (rc.canMove(dir)) rc.moveForward();
             else rc.setDirection(dir.rotateRight());
             rc.yield();
         }

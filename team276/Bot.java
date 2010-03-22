@@ -124,7 +124,7 @@ public abstract class Bot {
     }
     public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL) throws Exception {
         int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2];
-        MapLocation myloc = rc.getLocation();
+        MapLocation myloc = status.location;
         /* General swarm */
         Robot[] rl = rc.senseNearbyGroundRobots();
         int c = 0;

@@ -9,6 +9,9 @@ public class CommBot extends Bot {
 
     public void AI() throws Exception {
         while (true) {
+            status = rc.senseRobotInfo(self);
+            senseNear();
+
             //Debugger.debug_print("I'm a Comm!");
             rc.yield();
         }
