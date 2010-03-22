@@ -113,4 +113,40 @@ public abstract class Bot {
         }
         rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
     }
+    
+    
+    
+    public int attack() {
+    	//return attack(highPriorityTarget); uncomment when dpn pushes sensing class vars to bot.java
+    	return 0;
+    }
+    //RETURN VALUE = -1 : If target location is out of attack range or attack queue !isEmpty.
+    //RETURN VALUE = >1 : Rounds until next attack is available.
+    public int attack(RobotInfo target) {
+    	int atkCooldown = rc.getRoundsUntilAttackIdle();
+    	if(atkCooldown != 0)
+    		return atkCooldown;
+    	
+    	if(!rc.canAttackSquare(target.location) || rc.isAttackActive()) 
+    		return -1;
+    	
+    	if(target.type == RobotType.ARCHON) {
+    		if(rc.canAttackAir())
+    			rc.attackAir(target.location);
+    	}
+    	else {
+    		if(rc.canAttackGround())
+    			rc.attackGround(target.location);
+    	}
+    	
+    	return status.type.attackDelay();
+    }
 }
+
+
+
+
+
+
+
+
