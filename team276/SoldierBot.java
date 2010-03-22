@@ -9,11 +9,11 @@ public class SoldierBot extends Bot {
 
     public void AI() throws Exception {
         while (true) {
-            if (rc.isMovementActive() || rc.isAttackActive()){	//Do heavy stuff while we're moving
+            if (rc.isMovementActive() || rc.isAttackActive()) {	//Do heavy stuff while we're moving
                 //Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
                 //b.send(rc);
                 rc.yield();
-				continue;
+                continue;
             }
             Direction f = flock(1, 1, 1, 1, 1);	//Play with these values.
             f = f == Direction.OMNI ? rc.getDirection() : f;	//If OMNI, then AI failed, keep moving forward
@@ -27,8 +27,8 @@ public class SoldierBot extends Bot {
                 rc.setDirection(f);
                 rc.yield();
             }		//Gaurenteed to either be facing f or opposite f here
-            if (rc.canMove(f)){
-                if(f==rc.getDirection()) rc.moveForward();
+            if (rc.canMove(f)) {
+                if (f==rc.getDirection()) rc.moveForward();
                 else rc.moveBackward();	//Move backward if we're not facing that direction
             }
             rc.yield();

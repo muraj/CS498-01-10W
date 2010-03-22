@@ -10,7 +10,7 @@ public abstract class Bot {
     protected int bcCounterStart;
     protected PriorityQueue<ParsedMsg> msgQueue;
     protected final int MAX_GROUP_SZ = 3;
-    public Bot(RobotController rc) throws Exception{
+    public Bot(RobotController rc) throws Exception {
         this.rc = rc;
         this.self = rc.getRobot();
         this.status = rc.senseRobotInfo(self);
@@ -45,36 +45,36 @@ public abstract class Bot {
             align[1]+=ri.directionFacing.dy;
         }
         /* COLLISION GOAL */
-		if(COLLISION != 0) {
-			for (Direction d : Direction.values()) {
-				if (d == Direction.OMNI || d == Direction.NONE) continue;
-				TerrainTile t = rc.senseTerrainTile(myloc.add(d));
-				if (t != null && t.getType() != TerrainTile.TerrainType.LAND) {
-					collision[0] -= d.dx;
-					collision[1] -= d.dy;
-				}
-			}
-		}
+        if (COLLISION != 0) {
+            for (Direction d : Direction.values()) {
+                if (d == Direction.OMNI || d == Direction.NONE) continue;
+                TerrainTile t = rc.senseTerrainTile(myloc.add(d));
+                if (t != null && t.getType() != TerrainTile.TerrainType.LAND) {
+                    collision[0] -= d.dx;
+                    collision[1] -= d.dy;
+                }
+            }
+        }
         /* LEADER GOAL */
-		if(GOAL != 0) {
-			MapLocation leader = null;
-			double glen = Double.MAX_VALUE;
-			for (MapLocation t : rc.senseAlliedArchons()) {
-				double tdist = myloc.distanceSquaredTo(t);
-				if (tdist < glen) {
-					leader = t;
-					glen = tdist;
-				}
-			}
-			if (leader != null && rc.canSenseSquare(leader)) {
-				Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
-				goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
-				goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
-			} else if (leader != null) {
-				goal[0] = leader.getX() - myloc.getX();
-				goal[1] = leader.getY() - myloc.getY();
-			}
-		}
+        if (GOAL != 0) {
+            MapLocation leader = null;
+            double glen = Double.MAX_VALUE;
+            for (MapLocation t : rc.senseAlliedArchons()) {
+                double tdist = myloc.distanceSquaredTo(t);
+                if (tdist < glen) {
+                    leader = t;
+                    glen = tdist;
+                }
+            }
+            if (leader != null && rc.canSenseSquare(leader)) {
+                Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
+                goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
+                goal[1] = leader.getY()+5*leader_dir.dy - myloc.getY();
+            } else if (leader != null) {
+                goal[0] = leader.getX() - myloc.getX();
+                goal[1] = leader.getY() - myloc.getY();
+            }
+        }
         /* Calculate Vector lengths */
         double slen = Util.ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
         double alen = Util.ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
@@ -95,10 +95,10 @@ public abstract class Bot {
                       + goal[1]*GOAL/glen;
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
     }
-    public final void processMsgs(int MAXBC) throws Exception{
+    public final void processMsgs(int MAXBC) throws Exception {
         Message m;
         int startbc = Clock.getBytecodeNum();
-        while((m = rc.getNextMessage()) != null){
+        while ((m = rc.getNextMessage()) != null) {
             if (m.ints == null || m.ints.length < 3) continue;
             if (m.ints[0] != ParsedMsg.chksum(m)) continue;
             switch (MSGTYPE.values()[m.ints[2]]) {
@@ -113,33 +113,32 @@ public abstract class Bot {
         }
         rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
     }
-    
-    
-    
+
+
+
     public int attack() {
-    	//return attack(highPriorityTarget); uncomment when dpn pushes sensing class vars to bot.java
-    	return 0;
+        //return attack(highPriorityTarget); uncomment when dpn pushes sensing class vars to bot.java
+        return 0;
     }
     //RETURN VALUE = -1 : If target location is out of attack range or attack queue !isEmpty.
     //RETURN VALUE = >1 : Rounds until next attack is available.
     public int attack(RobotInfo target) {
-    	int atkCooldown = rc.getRoundsUntilAttackIdle();
-    	if(atkCooldown != 0)
-    		return atkCooldown;
-    	
-    	if(!rc.canAttackSquare(target.location) || rc.isAttackActive()) 
-    		return -1;
-    	
-    	if(target.type == RobotType.ARCHON) {
-    		if(rc.canAttackAir())
-    			rc.attackAir(target.location);
-    	}
-    	else {
-    		if(rc.canAttackGround())
-    			rc.attackGround(target.location);
-    	}
-    	
-    	return status.type.attackDelay();
+        int atkCooldown = rc.getRoundsUntilAttackIdle();
+        if (atkCooldown != 0)
+            return atkCooldown;
+
+        if (!rc.canAttackSquare(target.location) || rc.isAttackActive())
+            return -1;
+
+        if (target.type == RobotType.ARCHON) {
+            if (rc.canAttackAir())
+                rc.attackAir(target.location);
+        } else {
+            if (rc.canAttackGround())
+                rc.attackGround(target.location);
+        }
+
+        return status.type.attackDelay();
     }
 }
 

@@ -13,26 +13,28 @@ public class Util {
     public static class MessageComparator implements Comparator<ParsedMsg> {
         public int compare(ParsedMsg m1, ParsedMsg m2) {
             // retval < 0 => m1 is bigger, retval == 0 => equal
-			int x = m1.type().value - m2.type().value;
-			if(x!=0) return x;	//Prioritize on type first
-			x = m1.ttl() - m2.ttl();
-			if(x!=0) return x;	//Then on Time-to-Live
-			return m1.getNumBytes() - m2.getNumBytes();	//Last but not least, by size
+            int x = m1.type().value - m2.type().value;
+            if (x!=0) return x;	//Prioritize on type first
+            x = m1.ttl() - m2.ttl();
+            if (x!=0) return x;	//Then on Time-to-Live
+            return m1.getNumBytes() - m2.getNumBytes();	//Last but not least, by size
         }
     }
 }
 enum MSGTYPE {
     BEACON(0), ATTACK(1), NONE(2);
     public final int value;
-    MSGTYPE(int val) { value = val; }
+    MSGTYPE(int val) {
+        value = val;
+    }
 }
-class ParsedMsg extends Object{
+class ParsedMsg extends Object {
     protected Message m;
     public static int INT_SZ = 3;
     public static final int INIT_TTL = 10;
-	public static final int iCHKSUM = 0;
-	public static final int iTTL = iCHKSUM+1;
-	public static final int iTYPE = iCHKSUM+2;
+    public static final int iCHKSUM = 0;
+    public static final int iTTL = iCHKSUM+1;
+    public static final int iTYPE = iCHKSUM+2;
     public ParsedMsg(Message pm) throws Exception {
         //if (chksum(pm) != pm.ints[0])
         //    throw new Exception("CHKSUM not valid");
@@ -61,8 +63,12 @@ class ParsedMsg extends Object{
     public final int getNumBytes() {
         return m.getNumBytes();
     }
-    public MSGTYPE type() { return MSGTYPE.NONE; }
-	public final int ttl() { return m.ints[iTTL]; }
+    public MSGTYPE type() {
+        return MSGTYPE.NONE;
+    }
+    public final int ttl() {
+        return m.ints[iTTL];
+    }
 }
 class Beacon extends ParsedMsg {
     public static int INT_SZ = 24;
@@ -85,5 +91,7 @@ class Beacon extends ParsedMsg {
     public final RobotType robottype() {
         return RobotType.values()[m.ints[ROBOTYPE]];
     }
-    public MSGTYPE type() { return MSGTYPE.BEACON; }
+    public MSGTYPE type() {
+        return MSGTYPE.BEACON;
+    }
 }
