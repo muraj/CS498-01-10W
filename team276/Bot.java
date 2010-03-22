@@ -122,7 +122,7 @@ public abstract class Bot {
     }
     //RETURN VALUE = -1 : If target location is out of attack range or attack queue !isEmpty.
     //RETURN VALUE = >1 : Rounds until next attack is available.
-    public int attack(RobotInfo target) {
+    public int attack(RobotInfo target) throws Exception {
         int atkCooldown = rc.getRoundsUntilAttackIdle();
         if (atkCooldown != 0)
             return atkCooldown;
