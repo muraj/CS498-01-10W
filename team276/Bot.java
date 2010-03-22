@@ -126,13 +126,16 @@ public abstract class Bot {
         int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2];
         MapLocation myloc = status.location;
         /* General swarm */
-        Robot[] rl = rc.senseNearbyGroundRobots();
         int c = 0;
-        for (Robot r : rl) {
-            if (c > MAX_GROUP_SZ) break;    //Try to limit bytecodes.
-            RobotInfo ri = rc.senseRobotInfo(r);
-            if (rc.getTeam() != ri.team) continue;
-            else c++;
+        int len;
+
+        len = nAlliedGround;
+        if(len > MAX_GROUP_SZ)
+            len = MAX_GROUP_SZ;
+
+        for(c = 0; c < len; c++) {
+            RobotInfo ri = alliedGround[c];
+
             seperation[0]+= myloc.getX() - ri.location.getX();
             seperation[1]+= myloc.getY() - ri.location.getY();
             align[0]+=ri.directionFacing.dx;
@@ -150,6 +153,8 @@ public abstract class Bot {
             }
         }
         /* LEADER GOAL */
+// Becasue these following lines will allow us to find an archon out of our sensor range, my method
+// of setting up the 'alliedAirUnits' won't work for this. FIXME so that it does.
         if (GOAL != 0) {
             MapLocation leader = null;
             double glen = Double.MAX_VALUE;
