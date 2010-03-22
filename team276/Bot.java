@@ -216,8 +216,7 @@ public abstract class Bot {
 
 
     public int attack() {
-        //return attack(highPriorityTarget); uncomment when dpn pushes sensing class vars to bot.java
-        return 0;
+        return attack(highPriorityEnemy);
     }
     //RETURN VALUE = -1 : If target location is out of attack range or attack queue !isEmpty.
     //RETURN VALUE = >1 : Rounds until next attack is available.
@@ -225,6 +224,9 @@ public abstract class Bot {
         int atkCooldown = rc.getRoundsUntilAttackIdle();
         if (atkCooldown != 0)
             return atkCooldown;
+
+        if (target == null)
+            return -1;
 
         if (!rc.canAttackSquare(target.location) || rc.isAttackActive())
             return -1;
