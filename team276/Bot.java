@@ -266,6 +266,8 @@ public abstract class Bot {
         nEnemyAir = 0;
         nEnemyGround = 0;
 
+        highPriorityEnemy = null;
+
         airUnits = rc.senseNearbyAirRobots();
         groundUnits = rc.senseNearbyGroundRobots();
 
