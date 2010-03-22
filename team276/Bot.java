@@ -215,7 +215,7 @@ public abstract class Bot {
 
 
 
-    public int attack() {
+    public int attack() throws Exception {
         return attack(highPriorityEnemy);
     }
     //RETURN VALUE = -1 : If target location is out of attack range or attack queue !isEmpty.
