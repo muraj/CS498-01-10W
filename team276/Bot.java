@@ -17,7 +17,7 @@ public abstract class Bot {
         this.msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
     }
     public final void resetMsgQueue() {
-        msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
+        msgQueue.clear();   //Cheaper to make a new one?
     }
     public abstract void AI() throws Exception;
 
@@ -85,11 +85,11 @@ public abstract class Bot {
         alen = alen == 0 ? 1 : Math.sqrt(alen);
         clen = clen == 0 ? 1 : Math.sqrt(clen);
         /* Sum the vectors */
-        double outx = -seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
+        double outx = seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
                       + align[0]*ALIGNMENT/alen
                       + collision[0]*COLLISION/clen
                       + goal[0]*GOAL/glen;
-        double outy = -seperation[1]/slen*(SEPERATION - COHESION)
+        double outy = seperation[1]/slen*(SEPERATION - COHESION)
                       + align[1]*ALIGNMENT/alen
                       + collision[1]*COLLISION/clen
                       + goal[1]*GOAL/glen;
@@ -101,16 +101,19 @@ public abstract class Bot {
         while ((m = rc.getNextMessage()) != null) {
             if (m.ints == null || m.ints.length < 3) continue;
             if (m.ints[0] != ParsedMsg.chksum(m)) continue;
-            switch (MSGTYPE.values()[m.ints[2]]) {
+            switch (MSGTYPE.values()[m.ints[ParsedMsg.TYPE_I]]) {
             case BEACON:
-                msgQueue.add(new Beacon(m));
+                if(Clock.getRoundNum() - m.ints[ParsedMsg.AGE_I] < Beacon.MAX_AGE)
+                    msgQueue.add(new Beacon(m));
                 break;
             case ATTACK:
-                //msgQueue.add(new Attack(m));
+                if(Clock.getRoundNum() - m.ints[ParsedMsg.AGE_I] < Attack.MAX_AGE)
+                    msgQueue.add(new Attack(m));
                 break;
             }
             if (Clock.getBytecodeNum() - startbc >= MAXBC) break;
         }
+        if(!msgQueue.isEmpty()) msgQueue.peek().send(rc);   //Re-broadcast our highest priority... More logic
         rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
     }
 
