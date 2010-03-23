@@ -221,32 +221,64 @@ public abstract class Bot {
         rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
     }
 
-    public int attack() throws Exception {
-        return attack(highPriorityEnemy);
-    }
+    //Uses RobotInfo highPriorityEnemy as our target.
+    public boolean attack() throws Exception {
+        if( highPriorityEnemy == null
+            || status.roundsUntilAttackIdle != 0
+            || !rc.canAttackSquare(highPriorityEnemy.location)) {
 
-    //RETURN VALUE = -1 : If target location is out of attack range or attack queue !isEmpty.
-    //RETURN VALUE = >1 : Rounds until next attack is available.
-    public int attack(RobotInfo target) throws Exception {
-        int atkCooldown = rc.getRoundsUntilAttackIdle();
-        if (atkCooldown != 0)
-            return atkCooldown;
-
-        if (target == null)
-            return -1;
-
-        if (!rc.canAttackSquare(target.location) || rc.isAttackActive())
-            return -1;
-
-        if (target.type == RobotType.ARCHON) {
-            if (rc.canAttackAir())
-                rc.attackAir(target.location);
-        } else {
-            if (rc.canAttackGround())
-                rc.attackGround(target.location);
+            return false;
         }
 
-        return status.type.attackDelay();
+        //attacking takes higher priority than movement or changing direction.
+        if(rc.hasActionSet())
+            rc.clearAction();
+
+        if(highPriorityEnemy.type == RobotType.ARCHON) {
+            rc.attackAir(highPriorityEnemy.location);
+        }
+        else {
+            rc.attackGround(highPriorityEnemy.location);
+        }
+
+        return true;
+    }
+
+    public void handleMovement() throws Exception {
+        if(status.roundsUntilMovementIdle != 0 || rc.hasActionSet())
+            return;
+
+        if(queuedMoveDirection == null) {
+            Direction nextMove = flock(1,1,1,1,1);
+            if(nextMove == Direction.OMNI || nextMove == Direction.NONE)
+                return;
+
+            if(status.directionFacing != nextMove) {
+                queuedMoveDirection = nextMove;
+                rc.setDirection(nextMove);
+            }
+            else {
+                if(rc.canMove(nextMove)) {
+                    rc.moveForward();
+                }
+                else {
+                    //cant move our newly calculated direction
+                    //zomg what now?
+                    //same case as below.
+                }
+            }
+        }
+        else {
+            if(rc.canMove(queuedMoveDirection)) {
+                rc.moveForward();
+            }
+            else {
+                //our direction from the previous round is no longer a valid move
+                //do we flock again?
+                //wait a round?
+                //suicide? :P
+            }
+        }
     }
 
     // Sense the nearby robots
