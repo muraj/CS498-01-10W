@@ -32,6 +32,7 @@ public abstract class Bot {
     protected int nEnemyGround;
 
     protected Direction queuedMoveDirection;
+    protected boolean movementDelay = false;
 
     public abstract void AI() throws Exception;
 
@@ -223,62 +224,97 @@ public abstract class Bot {
 
     //Uses RobotInfo highPriorityEnemy as our target.
     public boolean attack() throws Exception {
+        //If we...
+        //  1.) Don't have a target
+        //  2.) Are On attack cooldown
+        //  3.) Can't attack the square our enemy is on
+        //We can't attack this round. Return out so we can try and move.
+
         if( highPriorityEnemy == null
             || status.roundsUntilAttackIdle != 0
             || !rc.canAttackSquare(highPriorityEnemy.location)) {
 
             return false;
         }
-
-        //attacking takes higher priority than movement or changing direction.
-        if(rc.hasActionSet())
+        //Attacking takes higher priority than movement.
+        //If we have an action set from the previous round (movement or direction),
+        //reset their global flags and remove it from the queue since we have a target to attack.
+        if(rc.hasActionSet()) {
+            resetMovementFlags();
             rc.clearAction();
+        }
 
+        //Call the proper attack call if our enemy is an airbore ARCHON.
         if(highPriorityEnemy.type == RobotType.ARCHON) {
             rc.attackAir(highPriorityEnemy.location);
         }
         else {
             rc.attackGround(highPriorityEnemy.location);
         }
-
         return true;
     }
 
     public void handleMovement() throws Exception {
-        if(status.roundsUntilMovementIdle != 0 || rc.hasActionSet())
+        //On movement cooldown, can't do anything here anyways.
+        if(status.roundsUntilMovementIdle != 0)
             return;
 
+        //Have an attack action in our queue.
+        //Attack has higher priority, so we concede movement on this round.
+        if(rc.hasActionSet() && queuedMoveDirection == null && !movementDelay)
+            return;
+
+        //No action on the queue and no direction set, lets find our next move.
         if(queuedMoveDirection == null) {
-            Direction nextMove = flock(1,1,1,1,1);
-            if(nextMove == Direction.OMNI || nextMove == Direction.NONE)
+            queuedMoveDirection = flock(1,1,1,1,1);
+
+            //If we magically got a direction to our current location, or worse, just quit now.
+            if(queuedMoveDirection == Direction.OMNI || queuedMoveDirection == Direction.NONE)
                 return;
 
-            if(status.directionFacing != nextMove) {
-                queuedMoveDirection = nextMove;
-                rc.setDirection(nextMove);
-            }
-            else {
-                if(rc.canMove(nextMove)) {
+            //If we're currently facing our target direction...
+            if(status.directionFacing == queuedMoveDirection) {
+                //If we can move forward, do it.
+                if(rc.canMove(queuedMoveDirection)) {
+                    resetMovementFlags();
                     rc.moveForward();
+                    return;
                 }
-                else {
-                    //cant move our newly calculated direction
-                    //zomg what now?
-                    //same case as below.
+                //If we cant move forward this round, flag our single round delay.
+                else movementDelay = true;
+            }
+            //If our target destination is behind us, don't change direction...
+            else if(status.directionFacing == queuedMoveDirection.opposite()) {
+                //If we can move backward, do it.
+                if(rc.canMove(queuedMoveDirection.opposite())) {
+                    queuedMoveDirection = null;
+                    rc.moveBackward();
+                    return;
                 }
+                //If we can't move backward, just flag our single round delay.
+                else movementDelay = true;
             }
         }
+        //We have a movement direction in our queue...
         else {
+            //If we can move forward, do it.
             if(rc.canMove(queuedMoveDirection)) {
                 rc.moveForward();
             }
+            //If we can't move forward...
             else {
-                //our direction from the previous round is no longer a valid move
-                //do we flock again?
-                //wait a round?
-                //suicide? :P
+                if(!movementDelay){
+                    movementDelay = true;
+                    return;
+                }
+                resetMovementFlags();
             }
         }
+    }
+
+    private final void resetMovementFlags() {
+        queuedMoveDirection = null;
+        movementDelay = false;
     }
 
     // Sense the nearby robots
