@@ -2,10 +2,13 @@ package team276;
 
 import battlecode.common.*;
 import java.util.PriorityQueue;
+import java.util.Arrays;
 
 public abstract class Bot {
-    protected static final int MAX_BOTS_SCAN = 10;
-    protected final int MAX_GROUP_SZ = 3;
+    protected static final int MAX_BOTS_SCAN    = 10;
+    protected static final int MAX_ARCHON_SCAN  = 6;
+    protected static final int MAX_MAP_DIM_SQ   = GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT;
+    protected final int MAX_GROUP_SZ            = 3;
 
     protected final RobotController rc;
     protected final Robot self;
@@ -14,18 +17,21 @@ public abstract class Bot {
     protected int bcCounterStart;
     protected PriorityQueue<ParsedMsg> msgQueue;
 
-    protected final RobotInfo alliedAir[];
+    protected MapLocation alliedArchons[];
+    protected MapLocation highPriorityAlliedArchon;
+
     protected final RobotInfo alliedGround[];
     protected final RobotInfo enemyAir[];
     protected final RobotInfo enemyGround[];
 
     protected RobotInfo highPriorityEnemy;
-    protected RobotInfo highPriorityAlliedArchon;
     protected RobotInfo highPriorityAlliedGround;
     protected int nAlliedAir;
     protected int nAlliedGround;
     protected int nEnemyAir;
     protected int nEnemyGround;
+
+    protected Direction queuedMoveDirection;
 
     public abstract void AI() throws Exception;
 
@@ -34,7 +40,7 @@ public abstract class Bot {
         this.self = rc.getRobot();
         this.status = rc.senseRobotInfo(self);
         this.msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
-        this.alliedAir = new RobotInfo[MAX_BOTS_SCAN];
+        this.alliedArchons = null;
         this.alliedGround = new RobotInfo[MAX_BOTS_SCAN];
         this.enemyAir = new RobotInfo[MAX_BOTS_SCAN];
         this.enemyGround = new RobotInfo[MAX_BOTS_SCAN];
@@ -45,10 +51,19 @@ public abstract class Bot {
         this.nAlliedGround = 0;
         this.nEnemyAir = 0;
         this.nEnemyGround = 0;
+        this.queuedMoveDirection = null;
     }
 
     public final void resetMsgQueue() {
         msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
+    }
+
+    public int calcAlliedArchonPriority(MapLocation ml) {
+        return MAX_MAP_DIM_SQ - status.location.distanceSquaredTo(ml);
+    }
+
+    public int calcAlliedPriority(RobotInfo ri) {
+        return -1;
     }
 
     // We assign units a priority based on the scanning robot's ability to attack, "LH" threshold,
@@ -122,6 +137,7 @@ public abstract class Bot {
     public RobotController getRC() {
         return rc;
     }
+
     public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL) throws Exception {
         int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2];
         MapLocation myloc = status.location;
@@ -153,18 +169,8 @@ public abstract class Bot {
             }
         }
         /* LEADER GOAL */
-// Becasue these following lines will allow us to find an archon out of our sensor range, my method
-// of setting up the 'alliedAirUnits' won't work for this. FIXME so that it does.
         if (GOAL != 0) {
-            MapLocation leader = null;
-            double glen = Double.MAX_VALUE;
-            for (MapLocation t : rc.senseAlliedArchons()) {
-                double tdist = myloc.distanceSquaredTo(t);
-                if (tdist < glen) {
-                    leader = t;
-                    glen = tdist;
-                }
-            }
+            MapLocation leader = highPriorityAlliedArchon;
             if (leader != null && rc.canSenseSquare(leader)) {
                 Direction leader_dir = rc.senseRobotInfo(rc.senseAirRobotAtLocation(leader)).directionFacing;
                 goal[0] = leader.getX()+5*leader_dir.dx - myloc.getX();
@@ -174,6 +180,7 @@ public abstract class Bot {
                 goal[1] = leader.getY() - myloc.getY();
             }
         }
+
         /* Calculate Vector lengths */
         double slen = Util.ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
         double alen = Util.ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
@@ -194,6 +201,7 @@ public abstract class Bot {
                       + goal[1]*GOAL/glen;
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
     }
+
     public final void processMsgs(int MAXBC) throws Exception {
         Message m;
         int startbc = Clock.getBytecodeNum();
@@ -213,11 +221,10 @@ public abstract class Bot {
         rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
     }
 
-
-
     public int attack() throws Exception {
         return attack(highPriorityEnemy);
     }
+
     //RETURN VALUE = -1 : If target location is out of attack range or attack queue !isEmpty.
     //RETURN VALUE = >1 : Rounds until next attack is available.
     public int attack(RobotInfo target) throws Exception {
@@ -242,15 +249,7 @@ public abstract class Bot {
         return status.type.attackDelay();
     }
 
-    // What did we want this to do? Return a highy priority target for energon transfer?
-    public int calcAlliedPriority(RobotInfo ri) {
-        return -1;
-    }
-
     // Sense the nearby robots
-    // With the new checks and enemy prioritizing:
-    // Friends: 569 for 5, ~113/friendly
-    // Enemies: 695 for 5 friendlies, 1 enemy, (695-569) = ~126/enemy
     // TODO: Figure out where to deal with attacker messgaes from others:
     // "Only care about those messgaes when you don't have a good local target"
     public final void senseNear() throws Exception {
@@ -269,6 +268,7 @@ public abstract class Bot {
         nEnemyGround = 0;
 
         highPriorityEnemy = null;
+        highPriorityAlliedArchon = null;
 
         airUnits = rc.senseNearbyAirRobots();
         groundUnits = rc.senseNearbyGroundRobots();
@@ -278,20 +278,11 @@ public abstract class Bot {
         if(len > MAX_BOTS_SCAN)
             len = MAX_BOTS_SCAN;
 
+        // Only deal with enemy air
         for(i = 0; i < len; i++) {
             tri = rc.senseRobotInfo(airUnits[i]);
 
-            if(status.team.equals(tri.team)) {
-                alliedAir[nAlliedAir++] = tri;
-
-                thpa = calcAlliedPriority(tri);
-                if(thpa > highPriorityAlliedValue) {
-                    highPriorityAlliedValue = thpa;
-                    highPriorityAlliedArchon = tri;
-                }
-            }
-
-            else {
+            if(status.team.equals(tri.team.opponent())) {
                 enemyAir[nEnemyAir++] = tri;
 
                 thpe = calcEnemyPriority(tri);
@@ -301,6 +292,21 @@ public abstract class Bot {
                 }
             }
         }
+
+        alliedArchons = rc.senseAlliedArchons();
+        len = alliedArchons.length;
+
+        // Our archons
+        for(nAlliedAir = 0; nAlliedAir < len; nAlliedAir++) {
+            thpa = calcAlliedArchonPriority(alliedArchons[nAlliedAir]);
+
+            if(thpa > highPriorityAlliedValue) {
+                highPriorityAlliedValue = thpa;
+                highPriorityAlliedArchon = alliedArchons[nAlliedAir];
+            }
+        }
+
+        nAlliedAir++;
 
         // Repeat for ground units.
         highPriorityAlliedValue = 0;
@@ -331,6 +337,7 @@ public abstract class Bot {
                 }
             }
         }
+
     }
 
     public void yield() {
