@@ -311,6 +311,7 @@ public abstract class Bot {
             //If we can move forward, do it.
             if(rc.canMove(queuedMoveDirection)) {
                 rc.moveForward();
+                resetMovementFlags();
             }
             //If we can't move forward...
             else {
