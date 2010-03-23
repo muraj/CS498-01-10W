@@ -266,11 +266,19 @@ public abstract class Bot {
 
         //No action on the queue and no direction set, lets find our next move.
         if(queuedMoveDirection == null) {
-            queuedMoveDirection = flock(1,1,1,1,1);
-
+            Direction flock = flock(1,1,1,1,1);
+            
             //If we magically got a direction to our current location, or worse, just quit now.
-            if(queuedMoveDirection == Direction.OMNI || queuedMoveDirection == Direction.NONE)
+            if(flock == Direction.OMNI || flock == Direction.NONE)
                 return;
+            
+            //Yeah thats right >.<
+            //Check your front three squares if the flock direction isn't valid.
+            queuedMoveDirection = (rc.canMove(flock)) 
+            						? flock 
+            						: (rc.canMove(flock.rotateLeft()))
+            							? flock.rotateLeft()
+            							: flock.rotateRight();
 
             //If we're currently facing our target direction...
             if(status.directionFacing == queuedMoveDirection) {
@@ -284,15 +292,18 @@ public abstract class Bot {
                 else movementDelay = true;
             }
             //If our target destination is behind us, don't change direction...
-            else if(status.directionFacing == queuedMoveDirection.opposite()) {
+         /*   else if(status.directionFacing == queuedMoveDirection.opposite()) {
                 //If we can move backward, do it.
                 if(rc.canMove(queuedMoveDirection.opposite())) {
-                    queuedMoveDirection = null;
+                    resetMovementFlags();
                     rc.moveBackward();
                     return;
                 }
                 //If we can't move backward, just flag our single round delay.
                 else movementDelay = true;
+            }*/
+            else {
+            	rc.setDirection(queuedMoveDirection);	
             }
         }
         //We have a movement direction in our queue...
