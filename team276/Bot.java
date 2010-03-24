@@ -261,7 +261,7 @@ public abstract class Bot {
 
         //Have an attack action in our queue.
         //Attack has higher priority, so we concede movement on this round.
-        if(rc.hasActionSet() && queuedMoveDirection == null && !movementDelay)
+        if(rc.hasActionSet()) // && queuedMoveDirection == null && !movementDelay)
             return;
 
         //No action on the queue and no direction set, lets find our next move.
