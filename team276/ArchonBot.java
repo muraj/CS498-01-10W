@@ -3,8 +3,8 @@ package team276;
 import battlecode.common.*;
 
 public class ArchonBot extends Bot {
-    private static final int MINIMUM_ENERGY_TO_SPAWN = 1;
-    private static final int MINIMUM_ENERGY_TO_TRANSFER = 2;
+    private static final int MINIMUM_ENERGY_TO_SPAWN = 70;
+    private static final int MINIMUM_ENERGY_TO_TRANSFER = 45;
     private static final int UNITENERGY_TRANSFER = 1;
     public ArchonBot(RobotController rc) throws Exception {
         super(rc);
