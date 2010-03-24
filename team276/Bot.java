@@ -240,9 +240,10 @@ public abstract class Bot {
         //If we have an action set from the previous round (movement or direction),
         //reset their global flags and remove it from the queue since we have a target to attack.
         if(rc.hasActionSet()) {
-            resetMovementFlags();
             rc.clearAction();
         }
+
+        resetMovementFlags();
 
         //Call the proper attack call if our enemy is an airbore ARCHON.
         if(highPriorityEnemy.type == RobotType.ARCHON) {
