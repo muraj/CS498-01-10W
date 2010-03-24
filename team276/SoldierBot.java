@@ -5,6 +5,8 @@ import battlecode.common.*;
 public class SoldierBot extends Bot {
     public SoldierBot(RobotController rc) throws Exception {
         super(rc);
+
+        this.LOW_HP_THRESH = 30;
     }
 
     public void AI() throws Exception {

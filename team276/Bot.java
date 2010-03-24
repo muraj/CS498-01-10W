@@ -10,6 +10,8 @@ public abstract class Bot {
     protected static final int MAX_MAP_DIM_SQ   = GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT;
     protected final int MAX_GROUP_SZ            = 3;
 
+    protected int LOW_HP_THRESH;
+
     protected final RobotController rc;
     protected final Robot self;
     protected RobotInfo status;
@@ -23,11 +25,13 @@ public abstract class Bot {
     protected final RobotInfo alliedGround[];
     protected final RobotInfo enemyAir[];
     protected final RobotInfo enemyGround[];
+    protected final int needEnergon[];      // Offsets of the alliedGround array that need energon.
 
     protected RobotInfo highPriorityEnemy;
     protected RobotInfo highPriorityAlliedGround;
     protected int nAlliedAir;
     protected int nAlliedGround;
+    protected int nNeedEnergon;
     protected int nEnemyAir;
     protected int nEnemyGround;
 
@@ -43,6 +47,7 @@ public abstract class Bot {
         this.msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
         this.alliedArchons = null;
         this.alliedGround = new RobotInfo[MAX_BOTS_SCAN];
+        this.needEnergon = new int[MAX_BOTS_SCAN];
         this.enemyAir = new RobotInfo[MAX_BOTS_SCAN];
         this.enemyGround = new RobotInfo[MAX_BOTS_SCAN];
         this.highPriorityEnemy = null;
@@ -50,9 +55,11 @@ public abstract class Bot {
         this.highPriorityAlliedGround = null;
         this.nAlliedAir = 0;
         this.nAlliedGround = 0;
+        this.nNeedEnergon = 0;
         this.nEnemyAir = 0;
         this.nEnemyGround = 0;
         this.queuedMoveDirection = null;
+        this.LOW_HP_THRESH = 10;
     }
 
     public final void resetMsgQueue() {
@@ -267,8 +274,14 @@ public abstract class Bot {
 
         //No action on the queue and no direction set, lets find our next move.
         if(queuedMoveDirection == null) {
-            Direction flock = flock(1,1,1,1,1);
-            
+            Direction flock;
+
+            // This needs to be fixed
+            if(status.energonLevel < LOW_HP_THRESH)
+                flock = flock(1, 1, 1, 1, 3);
+            else
+                flock = flock(1, 1, 1, 1, 1);
+
             //If we magically got a direction to our current location, or worse, just quit now.
             if(flock == Direction.OMNI || flock == Direction.NONE)
                 return;
@@ -347,6 +360,7 @@ public abstract class Bot {
         nAlliedGround = 0;
         nEnemyAir = 0;
         nEnemyGround = 0;
+        nNeedEnergon = 0;
 
         highPriorityEnemy = null;
         highPriorityAlliedArchon = null;
@@ -401,6 +415,9 @@ public abstract class Bot {
             if(status.team.equals(tri.team)) {
                 alliedGround[nAlliedGround++] = tri;
 
+                if(tri.location.isAdjacentTo(status.location) && tri.energonLevel < LOW_HP_THRESH && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
+                    needEnergon[nNeedEnergon++] = nAlliedGround - 1;
+
                 thpa = calcAlliedPriority(tri);
                 if(thpa > highPriorityAlliedValue) {
                     highPriorityAlliedValue = thpa;
@@ -418,7 +435,6 @@ public abstract class Bot {
                 }
             }
         }
-
     }
 
     public void yield() {
