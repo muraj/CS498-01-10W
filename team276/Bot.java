@@ -128,7 +128,7 @@ public abstract class Bot {
 
         // If the robot is "dead", ignore it.
         // FIXME: Read above comment.. does this work the way I think/hope it does?
-        if(tel <= 0)
+        if(ri.energonLevel <= 0)
             return -1;
 
         hv = (int)ri.maxEnergon - tel;
@@ -456,6 +456,7 @@ public abstract class Bot {
             if(rc.canAttackSquare(msgs[i].locations[0])) {
                 highPriorityArchonEnemy = msgs[i].locations[0];
                 highPriorityArchonEnemyType = msgs[i].ints[1];
+                break;
             }
         }
     }
