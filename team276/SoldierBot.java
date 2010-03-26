@@ -18,10 +18,12 @@ public class SoldierBot extends Bot {
         while (true) {
             status = rc.senseRobotInfo(self);
             senseNear();
+            processMsgs(1000);
             recvHighPriorityEnemy();
             transferEnergon();
             attack();
             handleMovement();
+            resetMsgQueue();
             rc.yield();
         }
     }
