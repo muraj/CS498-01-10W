@@ -28,6 +28,7 @@ public class ArchonBot extends Bot {
         while (true) {
             status = rc.senseRobotInfo(self);
             senseNear();
+            sendHighPriorityEnemy();
             spawnUnit();
             transferEnergon();
 

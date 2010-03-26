@@ -20,6 +20,7 @@ public class SoldierBot extends Bot {
             status = rc.senseRobotInfo(self);
             rc.setIndicatorString(0, "Reserve: " + status.energonReserve);
             senseNear();
+            recvHighPriorityEnemy();
             transferEnergon();
             attack();
             handleMovement();

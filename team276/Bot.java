@@ -5,10 +5,14 @@ import java.util.PriorityQueue;
 import java.util.Arrays;
 
 public abstract class Bot {
+    private static final int RANDOM_SEED        = 0x5B125AB;
     protected static final int MAX_BOTS_SCAN    = 10;
     protected static final int MAX_ARCHON_SCAN  = 6;
     protected static final int MAX_MAP_DIM_SQ   = GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT;
     protected final int MAX_GROUP_SZ            = 3;
+
+    protected MapLocation highPriorityArchonEnemy;
+    protected int highPriorityArchonEnemyType;
 
     protected int LOW_HP_THRESH;
 
@@ -37,6 +41,7 @@ public abstract class Bot {
 
     protected Direction queuedMoveDirection;
     protected boolean movementDelay = false;
+    protected Message msg = new Message();
 
     public abstract void AI() throws Exception;
 
@@ -60,6 +65,7 @@ public abstract class Bot {
         this.nEnemyGround = 0;
         this.queuedMoveDirection = null;
         this.LOW_HP_THRESH = 10;
+        this.highPriorityArchonEnemy = null;
     }
 
     public final void resetMsgQueue() {
@@ -107,7 +113,7 @@ public abstract class Bot {
         // FIXME: If we can't attack as far as we can sense, maybe this should get reworked
         // so that movement "pulls" this bot towards this enemy if it's the only target
         // available. At the same time, that might pull him out of flocking and force a 1v1?
-        if(!rc.canAttackSquare(ri.location) && status.type != RobotType.ARCHON)
+        if(status.type != RobotType.ARCHON && !rc.canAttackSquare(ri.location))
             return -1;
 
         // If the game updates the way I *HOPE* it does (the robots energon is calculated at the
@@ -259,10 +265,11 @@ public abstract class Bot {
         //  3.) Can't attack the square our enemy is on
         //We can't attack this round. Return out so we can try and move.
 
-        if( highPriorityEnemy == null
-            || status.roundsUntilAttackIdle != 0
-            || !rc.canAttackSquare(highPriorityEnemy.location)) {
+        if(highPriorityArchonEnemy == null && highPriorityEnemy == null)
+            return false;
 
+       if(status.roundsUntilAttackIdle != 0
+            || !rc.canAttackSquare(highPriorityEnemy.location)) {
             return false;
         }
         //Attacking takes higher priority than movement.
@@ -273,14 +280,30 @@ public abstract class Bot {
         }
 
         resetMovementFlags();
+        
+        //Call the proper attack call if we recv a target from an archon that we can attack.
+        if(highPriorityArchonEnemy != null) {
+            if(highPriorityArchonEnemyType == 0) {
+                rc.attackAir(highPriorityArchonEnemy);  
+            }
 
-        //Call the proper attack call if our enemy is an airbore ARCHON.
-        if(highPriorityEnemy.type == RobotType.ARCHON) {
-            rc.attackAir(highPriorityEnemy.location);
+            else {
+                rc.attackGround(highPriorityArchonEnemy);  
+             }
         }
-        else {
-            rc.attackGround(highPriorityEnemy.location);
+
+        //We didn't recv a valid target from an archon message,
+        //so attack our best target that we found within our sense range.
+        else if(highPriorityEnemy != null){
+            if(highPriorityEnemy.type == RobotType.ARCHON) {
+                rc.attackAir(highPriorityEnemy.location);  
+            }
+
+            else {
+                rc.attackGround(highPriorityEnemy.location);  
+            }
         }
+
         return true;
     }
 
@@ -288,8 +311,6 @@ public abstract class Bot {
         //On movement cooldown, can't do anything here anyways.
         if(status.roundsUntilMovementIdle != 0)
             return;
-
-        rc.setIndicatorString(1, "QMove: " + queuedMoveDirection);
 
         if(highPriorityEnemy != null)
             return;
@@ -371,6 +392,69 @@ public abstract class Bot {
         movementDelay = false;
     }
 
+    protected void sendHighPriorityEnemy() throws Exception {
+        if(highPriorityEnemy == null) {
+            //Debugger.debug_print("WE DON'T HAVE A TARGET!");
+            return;
+        }
+        
+        //If we already have a message in our queue, remove it.
+        if(rc.hasBroadcastMessage()) {
+            rc.clearBroadcast();    
+        }
+        
+        //Debugger.debug_print("send high priority enemy");
+        //Message contains:
+            //probably chksum some random number in our int array for cheap checks?
+            //ints[0] -- Random seed
+            //ints[1] -- robot type
+            //locations[0] -- MapLocation of our highPriorityEnemy
+        msg.ints = new int[] { RANDOM_SEED, highPriorityEnemy.type.ordinal() };
+        msg.locations = new MapLocation[] { highPriorityEnemy.location };
+        
+        Debugger.debug_print("ARCHON HIGH PRIORITY ENEMY: " + RobotType.values()[highPriorityEnemy.type.ordinal()] + ", " + highPriorityEnemy.location);
+        rc.broadcast(msg);
+        
+        if(rc.getBroadcastCost() > status.energonLevel) {
+            rc.clearBroadcast();    
+        }
+    }
+    
+    protected void recvHighPriorityEnemy() {
+        Message[] msgs = rc.getAllMessages();
+        int sz = msgs.length;
+        
+        for(int i=0; i<sz; i++) {
+            
+            if(msgs[i] == null) 
+                continue;
+            
+            if( msgs[i].ints == null 
+                || msgs[i].ints.length == 0 
+                || msgs[i].ints[0] != RANDOM_SEED) {
+            
+                continue;
+            }
+            
+            if( msgs[i].locations == null 
+                || msgs[i].locations.length == 0
+                || msgs[i].locations[0] == null) {
+            
+                continue;
+            }
+            
+            //Debugger.debug_print("Recv enemy.");
+            //Debugger.debug_print("Type: " + RobotType.values()[msgs[i].ints[1]]);
+            //Debugger.debug_print("Location: " + msgs[i].locations[0].toString());
+            //Debugger.debug_print("can attack? " + rc.canAttackSquare(msgs[i].locations[0]));
+            
+            if(rc.canAttackSquare(msgs[i].locations[0])) {
+                highPriorityArchonEnemy = msgs[i].locations[0];
+                highPriorityArchonEnemyType = msgs[i].ints[1];
+            }
+        }
+    }
+
     // Sense the nearby robots
     // TODO: Figure out where to deal with attacker messgaes from others:
     // "Only care about those messgaes when you don't have a good local target"
@@ -383,6 +467,9 @@ public abstract class Bot {
 
         highPriorityEnemyValue = 0;
         highPriorityAlliedValue = 0;
+
+        highPriorityArchonEnemy = null;
+        highPriorityArchonEnemyType = 0;
 
         nAlliedAir = 0;
         nAlliedGround = 0;
