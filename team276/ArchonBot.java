@@ -19,7 +19,6 @@ public class ArchonBot extends Bot {
 
     public void AI() throws Exception {
         status = rc.senseRobotInfo(self);
-
         while(status.energonLevel < MINIMUM_ENERGY_TO_SPAWN) {
             yield();
             status = rc.senseRobotInfo(self);
@@ -32,7 +31,7 @@ public class ArchonBot extends Bot {
             spawnUnit();
             transferEnergon();
 
-            if(!(didSpawn || status.roundsUntilMovementIdle != 0 || rc.hasActionSet()))
+            if(!didSpawn && status.roundsUntilMovementIdle == 0 && !rc.hasActionSet())
                 handleMovement();
 
 /*

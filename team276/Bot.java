@@ -92,7 +92,7 @@ public abstract class Bot {
         final int LH_WOUT           = 10;
         final int LH_TOWER          = 10;
 
-        final int LH_ARCHON_PV      = 1100;     // Base priority value for this low health unit
+        final int LH_ARCHON_PV      = 1200;     // Base priority value for this low health unit
         final int LH_CHAINER_PV     = 1000;
         final int LH_SOLDIER_PV     = 900;
         final int LH_TURRET_PV      = 800;
@@ -103,7 +103,7 @@ public abstract class Bot {
         final int HH_SOLDIER_PV     = 400;
         final int HH_TURRET_PV      = 300;
         final int HH_WOUT_PV        = 200;
-        final int HH_ARCHON_PV      = 1200;
+        final int HH_ARCHON_PV      = 1100;
         final int HH_TOWER_PV       = 0;
 
         int hv;
@@ -269,7 +269,8 @@ public abstract class Bot {
             return false;
 
        if(status.roundsUntilAttackIdle != 0
-            || !rc.canAttackSquare(highPriorityEnemy.location)) {
+            || (highPriorityArchonEnemy != null && !rc.canAttackSquare(highPriorityArchonEnemy))
+            || (highPriorityEnemy != null && !rc.canAttackSquare(highPriorityEnemy.location))) {
             return false;
         }
         //Attacking takes higher priority than movement.
@@ -312,12 +313,12 @@ public abstract class Bot {
         if(status.roundsUntilMovementIdle != 0)
             return;
 
-        if(highPriorityEnemy != null)
+        if(highPriorityEnemy != null && status.type != RobotType.ARCHON)
             return;
 
         //Have an attack action in our queue.
         //Attack has higher priority, so we concede movement on this round.
-        if(rc.hasActionSet()) // && queuedMoveDirection == null && !movementDelay)
+        if(rc.hasActionSet() && queuedMoveDirection == null && !movementDelay)
             return;
 
 
@@ -326,10 +327,14 @@ public abstract class Bot {
             Direction flock;
 
             // This needs to be fixed
-            //if(status.energonLevel < LOW_HP_THRESH)
-            //  flock = flock(1, 1, 1, 1, 3, -1);
             //else
-            flock = flock(1, 1.5, 1, 1, 0, 20);
+            if(status.type == RobotType.ARCHON)
+                flock = flock(1, 2, 1, 1, 0, 20);
+            else
+                if(status.energonLevel < LOW_HP_THRESH)
+                    flock = flock(1, 1, 2, 1, 3, 1000);
+                else
+                    flock = flock(1, 1, 1, 1, 0, 1000);
 
             //If we magically got a direction to our current location, or worse, just quit now.
             if(flock == Direction.OMNI || flock == Direction.NONE)
@@ -412,7 +417,7 @@ public abstract class Bot {
         msg.ints = new int[] { RANDOM_SEED, highPriorityEnemy.type.ordinal() };
         msg.locations = new MapLocation[] { highPriorityEnemy.location };
         
-        Debugger.debug_print("ARCHON HIGH PRIORITY ENEMY: " + RobotType.values()[highPriorityEnemy.type.ordinal()] + ", " + highPriorityEnemy.location);
+        //Debugger.debug_print("ARCHON HIGH PRIORITY ENEMY: " + RobotType.values()[highPriorityEnemy.type.ordinal()] + ", " + highPriorityEnemy.location);
         rc.broadcast(msg);
         
         if(rc.getBroadcastCost() > status.energonLevel) {
