@@ -7,7 +7,7 @@ public class ArchonBot extends Bot {
     private static final int MINIMUM_ENERGY_TO_SPAWN = 70;
     private static final int MINIMUM_ENERGY_TO_TRANSFER = 25;
     private static final int UNITENERGY_TRANSFER = 10;
-    private static final int SOLDIER_TO_ARCHON_RATIO = 3;
+    private static final double SOLDIER_TO_ARCHON_RATIO = 3;
     private boolean didSpawn;
     private int lastSpawnRound;
 
@@ -16,6 +16,7 @@ public class ArchonBot extends Bot {
 
         didSpawn = false;
         lastSpawnRound = 0;
+        this.LOW_HP_THRESH = 75;
     }
 
     public void AI() throws Exception {
@@ -28,10 +29,14 @@ public class ArchonBot extends Bot {
         while (true) {
             status = rc.senseRobotInfo(self);
             senseNear();
-            Debugger.debug_print("hpae: " + highPriorityArchonEnemy);
+           // Debugger.debug_print("hpae: " + highPriorityEnemy);
             sendHighPriorityEnemy();
             spawnUnit();
+            if(didSpawn)
+            	transferEnergonArchon();
             transferEnergon();
+            //if(!didSpawn)
+            //	transferEnergon();
 
             if(!didSpawn && status.roundsUntilMovementIdle == 0 && !rc.hasActionSet())
                 handleMovement();
@@ -40,7 +45,7 @@ public class ArchonBot extends Bot {
         }
     }
 
-    public void transferEnergon() throws Exception {
+    public void transferEnergonArchon() throws Exception {
         Robot r;
         RobotInfo ri;
         MapLocation ahead;
@@ -133,7 +138,7 @@ public class ArchonBot extends Bot {
 
         double ratio = nAlliedGround/nearbyArchons;
 
-        Debugger.debug_print("Ratio: " + ratio);
+       // Debugger.debug_print("Ratio: " + ratio);
 
         if(ratio < SOLDIER_TO_ARCHON_RATIO)
             return true;

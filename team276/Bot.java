@@ -27,15 +27,19 @@ public abstract class Bot {
     protected MapLocation highPriorityAlliedArchon;
 
     protected final RobotInfo alliedGround[];
+    protected final RobotInfo[] alliedAir;
     protected final RobotInfo enemyAir[];
     protected final RobotInfo enemyGround[];
+    
     protected final int needEnergon[];      // Offsets of the alliedGround array that need energon.
-
+    protected final int needEnergonArchon[]; //offsets into archon array
+    
     protected RobotInfo highPriorityEnemy;
     protected RobotInfo highPriorityAlliedGround;
     protected int nAlliedAir;
     protected int nAlliedGround;
     protected int nNeedEnergon;
+    protected int nNeedEnergonArchon;
     protected int nEnemyAir;
     protected int nEnemyGround;
 
@@ -52,7 +56,9 @@ public abstract class Bot {
         this.msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
         this.alliedArchons = null;
         this.alliedGround = new RobotInfo[MAX_BOTS_SCAN];
+        this.alliedAir = new RobotInfo[MAX_BOTS_SCAN];
         this.needEnergon = new int[MAX_BOTS_SCAN];
+        this.needEnergonArchon = new int[MAX_BOTS_SCAN];
         this.enemyAir = new RobotInfo[MAX_BOTS_SCAN];
         this.enemyGround = new RobotInfo[MAX_BOTS_SCAN];
         this.highPriorityEnemy = null;
@@ -61,6 +67,7 @@ public abstract class Bot {
         this.nAlliedAir = 0;
         this.nAlliedGround = 0;
         this.nNeedEnergon = 0;
+        this.nNeedEnergonArchon = 0;
         this.nEnemyAir = 0;
         this.nEnemyGround = 0;
         this.queuedMoveDirection = null;
@@ -329,12 +336,13 @@ public abstract class Bot {
             // This needs to be fixed
             //else
             if(status.type == RobotType.ARCHON)
-                flock = flock(1, 2, 1, 0, 0, 20);
-            else
+                flock = flock(1, 3, 1, 1, 2, 20);
+            else {
                 if(status.energonLevel < LOW_HP_THRESH)
-                    flock = flock(1, 1, 2, 1, 3, 1000);
+                    flock = flock(1, 1, 2, 2, 3, 1000);
                 else
-                    flock = flock(1, 1, 1, 1, 0, 1000);
+                    flock = flock(1, 1, 1, 2, 1, 1000);
+            }
 
             //If we magically got a direction to our current location, or worse, just quit now.
             if(flock == Direction.OMNI || flock == Direction.NONE)
@@ -343,22 +351,26 @@ public abstract class Bot {
             //Yeah thats right >.<
             //Check your front three squares if the flock direction isn't valid.
             queuedMoveDirection = (rc.canMove(flock)) 
-            						? flock 
+           							? flock 
             						: (rc.canMove(flock.rotateLeft()))
             							? flock.rotateLeft()
             							: flock.rotateRight();
 
             //If we're currently facing our target direction...
-            if(status.directionFacing == queuedMoveDirection) {
+            /*
+            if(status.directionFacing.equals(queuedMoveDirection)) {
                 //If we can move forward, do it.
+                //if(status.id == 92){
+                //	Debugger.debug_print(queuedMoveDirection.toString());	
+                //}
                 if(rc.canMove(queuedMoveDirection)) {
+                	rc.moveForward();
                     resetMovementFlags();
-                    rc.moveForward();
                     return;
                 }
                 //If we cant move forward this round, flag our single round delay.
                 else movementDelay = true;
-            }
+            } */
             //If our target destination is behind us, don't change direction...
          /*   else if(status.directionFacing == queuedMoveDirection.opposite()) {
                 //If we can move backward, do it.
@@ -370,9 +382,9 @@ public abstract class Bot {
                 //If we can't move backward, just flag our single round delay.
                 else movementDelay = true;
             }*/
-            else {
+           // else {
             	rc.setDirection(queuedMoveDirection);	
-            }
+          //  }
         }
         //We have a movement direction in our queue...
         else {
@@ -395,6 +407,23 @@ public abstract class Bot {
     private final void resetMovementFlags() {
         queuedMoveDirection = null;
         movementDelay = false;
+    }
+    
+    protected void sendHighPriorityArchonEnemy() throws Exception {
+    	if(highPriorityArchonEnemy == null)
+    		return;
+    	
+    	if(rc.hasBroadcastMessage())
+    		rc.clearBroadcast();
+    	
+    	
+    	msg.ints = new int[] { RANDOM_SEED, highPriorityArchonEnemyType };
+    	msg.locations = new MapLocation[] { highPriorityArchonEnemy };
+    	rc.broadcast(msg);
+    	
+    	if(rc.getBroadcastCost() > status.energonLevel) {
+    		rc.clearBroadcast();	
+    	}
     }
 
     protected void sendHighPriorityEnemy() throws Exception {
@@ -425,7 +454,7 @@ public abstract class Bot {
         }
     }
     
-    protected void recvHighPriorityEnemy() {
+    protected void recvHighPriorityEnemy() throws Exception{
         Message[] msgs = rc.getAllMessages();
         int sz = msgs.length;
         
@@ -449,16 +478,18 @@ public abstract class Bot {
             }
             
             //Debugger.debug_print("Recv enemy.");
-            Debugger.debug_print("Type: " + RobotType.values()[msgs[i].ints[1]]);
+            //Debugger.debug_print("Type: " + RobotType.values()[msgs[i].ints[1]]);
             //Debugger.debug_print("Location: " + msgs[i].locations[0].toString());
             //Debugger.debug_print("can attack? " + rc.canAttackSquare(msgs[i].locations[0]));
             
             if(rc.canAttackSquare(msgs[i].locations[0])) {
                 highPriorityArchonEnemy = msgs[i].locations[0];
                 highPriorityArchonEnemyType = msgs[i].ints[1];
+                //sendHighPriorityArchonEnemy();
                 break;
             }
         }
+       // sendHighPriorityArchonEnemy();
     }
 
     // Sense the nearby robots
@@ -482,6 +513,7 @@ public abstract class Bot {
         nEnemyAir = 0;
         nEnemyGround = 0;
         nNeedEnergon = 0;
+        nNeedEnergonArchon = 0;
 
         highPriorityEnemy = null;
         highPriorityAlliedArchon = null;
@@ -497,7 +529,7 @@ public abstract class Bot {
         // Only deal with enemy air
         for(i = 0; i < len; i++) {
             tri = rc.senseRobotInfo(airUnits[i]);
-
+            
             if(status.team.equals(tri.team.opponent())) {
                 enemyAir[nEnemyAir++] = tri;
 
@@ -507,12 +539,31 @@ public abstract class Bot {
                     highPriorityEnemy = tri;
                 }
             }
+            else {
+            	alliedAir[nAlliedAir++] = tri;	
+            	
+            	if(tri.location.isAdjacentTo(status.location) && tri.energonLevel < LOW_HP_THRESH && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
+                    needEnergonArchon[nNeedEnergonArchon++] = nAlliedAir - 1;
+            }
         }
 
+        //get our closed archon still
+        //FLOCKING
+        //don't use nAlliedAir though
         alliedArchons = rc.senseAlliedArchons();
         len = alliedArchons.length;
+        
+        for(i=0; i<len; i++) {
+        	thpa = calcAlliedArchonPriority(alliedArchons[i]);
+        	
+        	if(thpa > highPriorityAlliedValue) {
+        		highPriorityAlliedValue = thpa;
+        		highPriorityAlliedArchon = alliedArchons[i];
+        	}
+        }
 
         // Our archons
+        /*
         for(nAlliedAir = 0; nAlliedAir < len; nAlliedAir++) {
             thpa = calcAlliedArchonPriority(alliedArchons[nAlliedAir]);
 
@@ -523,6 +574,7 @@ public abstract class Bot {
         }
 
         nAlliedAir++;
+        */
 
         // Repeat for ground units.
         highPriorityAlliedValue = 0;
@@ -563,8 +615,11 @@ public abstract class Bot {
 
         for(int i = 0; i < nNeedEnergon; i++)
             total += alliedGround[needEnergon[i]].energonLevel;
+        
+       // for(int i=0; i<nNeedEnergonArchon; i++)
+       // 	total += alliedAir[needEnergonArchon[i]].energonLevel;
 
-        return total/nNeedEnergon;
+        return total/(nNeedEnergon + nNeedEnergonArchon);
     }
     
     public void transferEnergon() throws Exception {
@@ -573,16 +628,17 @@ public abstract class Bot {
 
         if(status.type.isBuilding())
             return;
-
-        if(status.energonLevel < LOW_HP_THRESH)
+        
+        if(status.energonLevel < LOW_HP_THRESH-15)
             return;
+        
 
         adjAvg = getAdjacentEnergonAvg();
         if(adjAvg > status.energonLevel)
             return;
 
         toGive = status.energonLevel - adjAvg;
-        toGive /= nNeedEnergon;
+        toGive /= (nNeedEnergon + nNeedEnergonArchon);
 
         for(int i = 0; i < nNeedEnergon; i++) {
             RobotInfo ri = alliedGround[needEnergon[i]];
@@ -592,6 +648,16 @@ public abstract class Bot {
                 botEnerNeed = toGive;
 
             rc.transferUnitEnergon(botEnerNeed, ri.location, RobotLevel.ON_GROUND);
+        }
+        
+        for(int i=0; i<nNeedEnergonArchon; i++) {
+        	RobotInfo ri = alliedAir[needEnergonArchon[i]];
+        	double energonNeeded = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
+        	
+        	if(energonNeeded > toGive)
+        		energonNeeded = toGive;
+        	
+        	rc.transferUnitEnergon(energonNeeded, ri.location, RobotLevel.IN_AIR);
         }
     }
 
