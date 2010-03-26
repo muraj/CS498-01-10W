@@ -8,6 +8,9 @@ public class WoutBot extends Bot {
     }
     public void AI() throws Exception {
         while (true) {
+            status = rc.senseRobotInfo(self);
+            senseNear();
+
             //Debugger.debug_print("I'm a WOUT!");
             rc.yield();
         }
