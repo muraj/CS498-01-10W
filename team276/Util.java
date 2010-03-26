@@ -125,15 +125,15 @@ class Beacon extends ParsedMsg {
         return robotInfo;
     }
 }
-class Attack extends ParsedMsg {
+class AttackMsg extends ParsedMsg {
     public static final int MAX_AGE = 5;
     public static final int INT_SZ = Util.ROBOTINFO_SZ + 3;
     public static final int ROBOT_INFO_START = 3;
     public static RobotInfo robotInfo;  //Cache the RobotInfo object on first use
-    public Attack(Message pm) throws Exception {
+    public AttackMsg(Message pm) throws Exception {
         super(pm);
     }
-    public Attack(RobotInfo ri) {
+    public AttackMsg(RobotInfo ri) {
         super(INT_SZ, MSGTYPE.ATTACK.value);
         Util.serializeRobotInfo(ri, m.ints, ROBOT_INFO_START);
     }
