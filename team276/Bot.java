@@ -6,10 +6,10 @@ import java.util.Arrays;
 
 public abstract class Bot {
     private static final int RANDOM_SEED        = 0x5B125AB;
-    protected static final int MAX_BOTS_SCAN    = 10;
+    protected static final int MAX_BOTS_SCAN    = 20;
     protected static final int MAX_ARCHON_SCAN  = 6;
     protected static final int MAX_MAP_DIM_SQ   = GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT;
-    protected final int MAX_GROUP_SZ            = 3;
+    protected final int MAX_GROUP_SZ            = 10;
 
     protected MapLocation highPriorityArchonEnemy;
     protected int highPriorityArchonEnemyType;
@@ -104,7 +104,7 @@ public abstract class Bot {
         final int HH_TURRET_PV      = 300;
         final int HH_WOUT_PV        = 200;
         final int HH_ARCHON_PV      = 1100;
-        final int HH_TOWER_PV       = 0;
+        final int HH_TOWER_PV       = 100;
 
         int hv;
         int tel;
@@ -329,7 +329,7 @@ public abstract class Bot {
             // This needs to be fixed
             //else
             if(status.type == RobotType.ARCHON)
-                flock = flock(1, 2, 1, 1, 0, 20);
+                flock = flock(1, 2, 1, 0, 0, 20);
             else
                 if(status.energonLevel < LOW_HP_THRESH)
                     flock = flock(1, 1, 2, 1, 3, 1000);
@@ -449,7 +449,7 @@ public abstract class Bot {
             }
             
             //Debugger.debug_print("Recv enemy.");
-            //Debugger.debug_print("Type: " + RobotType.values()[msgs[i].ints[1]]);
+            Debugger.debug_print("Type: " + RobotType.values()[msgs[i].ints[1]]);
             //Debugger.debug_print("Location: " + msgs[i].locations[0].toString());
             //Debugger.debug_print("can attack? " + rc.canAttackSquare(msgs[i].locations[0]));
             

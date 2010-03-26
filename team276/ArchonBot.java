@@ -7,6 +7,7 @@ public class ArchonBot extends Bot {
     private static final int MINIMUM_ENERGY_TO_SPAWN = 70;
     private static final int MINIMUM_ENERGY_TO_TRANSFER = 25;
     private static final int UNITENERGY_TRANSFER = 10;
+    private static final int SOLDIER_TO_ARCHON_RATIO = 3;
     private boolean didSpawn;
     private int lastSpawnRound;
 
@@ -27,43 +28,13 @@ public class ArchonBot extends Bot {
         while (true) {
             status = rc.senseRobotInfo(self);
             senseNear();
+            Debugger.debug_print("hpae: " + highPriorityArchonEnemy);
             sendHighPriorityEnemy();
             spawnUnit();
             transferEnergon();
 
             if(!didSpawn && status.roundsUntilMovementIdle == 0 && !rc.hasActionSet())
                 handleMovement();
-
-/*
-            if (rc.isMovementActive()) {	//While on movement cooldown, crunch on compute AI <- Multiplexing!
-                processMsgs(1000);
-                rc.setIndicatorString(0,"QUEUE: "+msgQueue.size());
-                resetMsgQueue();	//Clear the local queue
-                rc.yield();
-                continue;
-            }
-            Direction dir = status.directionFacing;
-            MapLocation loc = status.location;
-            MapLocation ahead = loc.add(dir);
-            if (rc.senseTerrainTile(ahead).getType() == TerrainTile.TerrainType.LAND) {
-                Robot r = rc.senseGroundRobotAtLocation(ahead);
-                if (r == null) {
-                    if (status.energonLevel > RobotType.SOLDIER.spawnCost()+MINIMUM_ENERGY_TO_SPAWN) {
-                        rc.spawn(RobotType.SOLDIER);
-                        rc.yield();
-                        continue;
-                    }
-                } else {
-                    RobotInfo ri = rc.senseRobotInfo(r);
-                    if (ri.team == status.team && ri.energonLevel < ri.type.maxEnergon()
-                            && status.energonLevel > MINIMUM_ENERGY_TO_TRANSFER && !ri.type.isBuilding()) {
-                        rc.transferUnitEnergon(UNITENERGY_TRANSFER,ahead,RobotLevel.ON_GROUND);
-                        rc.yield();
-                        continue;
-                    }
-                }
-            }
-*/
 
             yield();
         }
@@ -105,18 +76,10 @@ public class ArchonBot extends Bot {
 
             // Give 1 energon until full
             else if(ri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE) {
-                rc.transferUnitEnergon(1, ahead, RobotLevel.ON_GROUND);
+                if(status.energonLevel > MINIMUM_ENERGY_TO_TRANSFER)
+                    rc.transferUnitEnergon(1, ahead, RobotLevel.ON_GROUND);
 
             }
-
-
-/*
-            // Redundant checks if we just spawned, some maybe not necessary
-            if(ri.team == status.team && ri.energonLevel <  ri.maxEnergon
-                && status.energonLevel > MINIMUM_ENERGY_TO_TRANSFER && !ri.type.isBuilding()) {
-                rc.transferUnitEnergon(UNITENERGY_TRANSFER, ahead, RobotLevel.ON_GROUND);
-            }
-*/
         }
 
         else {
@@ -164,15 +127,28 @@ public class ArchonBot extends Bot {
         return true;
     }
 
+    private boolean needToSpawn() {
+        int nearbyArchons = rc.senseNearbyAirRobots().length;
+        nearbyArchons = (nearbyArchons == 0 ? 1 : nearbyArchons);
+
+        double ratio = nAlliedGround/nearbyArchons;
+
+        Debugger.debug_print("Ratio: " + ratio);
+
+        if(ratio < SOLDIER_TO_ARCHON_RATIO)
+            return true;
+        return false;
+    }
+
     public void spawnUnit() throws Exception {
         if(!canSpawn())
             return;
 
         // TODO Spawn a unit based on numbers of needed units
-        // if(needToSpawn()) {
+        if(needToSpawn()) {
             rc.spawn(RobotType.SOLDIER);
             didSpawn = true;
             lastSpawnRound = Clock.getRoundNum();
-        // }
+        }
     }
 }
