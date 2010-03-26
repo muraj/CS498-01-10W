@@ -1,10 +1,11 @@
 package team276;
 
 import battlecode.common.*;
+import java.util.Arrays;
 
 public class ArchonBot extends Bot {
     private static final int MINIMUM_ENERGY_TO_SPAWN = 70;
-    private static final int MINIMUM_ENERGY_TO_TRANSFER = 45;
+    private static final int MINIMUM_ENERGY_TO_TRANSFER = 25;
     private static final int UNITENERGY_TRANSFER = 10;
     private boolean didSpawn;
     private int lastSpawnRound;
@@ -17,14 +18,21 @@ public class ArchonBot extends Bot {
     }
 
     public void AI() throws Exception {
-        Beacon b = new Beacon(rc.senseRobotInfo(rc.getRobot()));
-        b.send(rc);
+        status = rc.senseRobotInfo(self);
+
+        while(status.energonLevel < MINIMUM_ENERGY_TO_SPAWN) {
+            yield();
+            status = rc.senseRobotInfo(self);
+        }
+
         while (true) {
             status = rc.senseRobotInfo(self);
             senseNear();
             spawnUnit();
             transferEnergon();
-            handleMovement();
+
+            if(!(didSpawn || status.roundsUntilMovementIdle != 0 || rc.hasActionSet()))
+                handleMovement();
 
 /*
             if (rc.isMovementActive()) {	//While on movement cooldown, crunch on compute AI <- Multiplexing!
@@ -57,7 +65,7 @@ public class ArchonBot extends Bot {
             }
 */
 
-            rc.yield();
+            yield();
         }
     }
 
@@ -82,16 +90,53 @@ public class ArchonBot extends Bot {
 
             ri = rc.senseRobotInfo(r);
 
+            // Last turn before awakened. Fill it up if we can!
+            if(ri.maxEnergon -  ri.energonLevel < 1) {
+                double need = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
+                double toGive = status.energonLevel - MINIMUM_ENERGY_TO_TRANSFER;
+
+                if(need < toGive)
+                    toGive = need;
+
+                if(toGive > 0)
+                    rc.transferUnitEnergon(toGive, ahead, RobotLevel.ON_GROUND);
+
+            }
+
+            // Give 1 energon until full
+            else if(ri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE) {
+                rc.transferUnitEnergon(1, ahead, RobotLevel.ON_GROUND);
+
+            }
+
+
+/*
             // Redundant checks if we just spawned, some maybe not necessary
             if(ri.team == status.team && ri.energonLevel <  ri.maxEnergon
                 && status.energonLevel > MINIMUM_ENERGY_TO_TRANSFER && !ri.type.isBuilding()) {
                 rc.transferUnitEnergon(UNITENERGY_TRANSFER, ahead, RobotLevel.ON_GROUND);
             }
+*/
         }
 
-        // Give the peasents around us some energon
-        for(int i = 0; i < nNeedEnergon; i++) {
-            rc.transferUnitEnergon(1, alliedGround[needEnergon[i]].location, RobotLevel.ON_GROUND);
+        else {
+            double enerToGive = status.energonLevel - MINIMUM_ENERGY_TO_TRANSFER;
+
+            if(enerToGive < 0)
+                return;
+
+            double perBot = enerToGive/nNeedEnergon;
+
+            // Give the peasents around us some energon
+            for(int i = 0; i < nNeedEnergon; i++) {
+                ri = alliedGround[needEnergon[i]];
+                double botEnerNeed = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
+
+                if(botEnerNeed > perBot)
+                    botEnerNeed = perBot;
+                    
+                rc.transferUnitEnergon(botEnerNeed, alliedGround[needEnergon[i]].location, RobotLevel.ON_GROUND);
+            }
         }
     }
 
@@ -129,16 +174,5 @@ public class ArchonBot extends Bot {
             didSpawn = true;
             lastSpawnRound = Clock.getRoundNum();
         // }
-    }
-
-    public void handleMovement() throws Exception {
-        if(didSpawn || status.roundsUntilMovementIdle != 0 || rc.hasActionSet())
-            return;
-
-        // We need a better way to "guide" our archons for movement
-        if(rc.canMove(status.directionFacing))
-            rc.moveForward();
-        else
-            rc.setDirection(status.directionFacing.rotateRight());
     }
 }

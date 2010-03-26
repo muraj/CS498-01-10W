@@ -97,7 +97,7 @@ public abstract class Bot {
         final int HH_SOLDIER_PV     = 400;
         final int HH_TURRET_PV      = 300;
         final int HH_WOUT_PV        = 200;
-        final int HH_ARCHON_PV      = 100;
+        final int HH_ARCHON_PV      = 1200;
         final int HH_TOWER_PV       = 0;
 
         int hv;
@@ -107,7 +107,7 @@ public abstract class Bot {
         // FIXME: If we can't attack as far as we can sense, maybe this should get reworked
         // so that movement "pulls" this bot towards this enemy if it's the only target
         // available. At the same time, that might pull him out of flocking and force a 1v1?
-        if(!rc.canAttackSquare(ri.location))
+        if(!rc.canAttackSquare(ri.location) && status.type != RobotType.ARCHON)
             return -1;
 
         // If the game updates the way I *HOPE* it does (the robots energon is calculated at the
@@ -146,8 +146,8 @@ public abstract class Bot {
         return rc;
     }
 
-    public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL) throws Exception {
-        int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2];
+    public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL, double ENEMY_GOAL) throws Exception {
+        int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2], enemies=new int[2];
         MapLocation myloc = status.location;
         /* General swarm */
         int c = 0;
@@ -165,6 +165,23 @@ public abstract class Bot {
             align[0]+=ri.directionFacing.dx;
             align[1]+=ri.directionFacing.dy;
         }
+
+        if(ENEMY_GOAL != 0) {
+            if(nEnemyAir > 0) {
+                for(c = 0; c < nEnemyAir; c++) {
+                    enemies[0] -= myloc.getX() - enemyAir[c].location.getX();
+                    enemies[1] -= myloc.getY() - enemyAir[c].location.getY();
+                }
+            }
+
+            else if(nEnemyGround > 0) {
+                for(c = 0; c < nEnemyGround; c++) {
+                    enemies[0] -= myloc.getX() - enemyGround[c].location.getX();
+                    enemies[1] -= myloc.getY() - enemyGround[c].location.getY();
+                }
+            }
+        }
+
         /* COLLISION GOAL */
         if (COLLISION != 0) {
             for (Direction d : Direction.values()) {
@@ -194,19 +211,24 @@ public abstract class Bot {
         double alen = Util.ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
         double clen = Util.ZERO.distanceSquaredTo(new MapLocation(collision[0], collision[1]));
         double glen = GOAL != 0 ? Math.sqrt(Util.ZERO.distanceSquaredTo(new MapLocation(goal[0], goal[1]))) : 1;
+        double elen = Util.ZERO.distanceSquaredTo(new MapLocation(enemies[0], enemies[1]));
 
         slen = slen == 0 ? 1 : Math.sqrt(slen);    //Prevent divide by zero
         alen = alen == 0 ? 1 : Math.sqrt(alen);
         clen = clen == 0 ? 1 : Math.sqrt(clen);
+        elen = elen == 0 ? 1 : Math.sqrt(elen);
+
         /* Sum the vectors */
-        double outx = -seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
+        double outx = seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
                       + align[0]*ALIGNMENT/alen
                       + collision[0]*COLLISION/clen
-                      + goal[0]*GOAL/glen;
-        double outy = -seperation[1]/slen*(SEPERATION - COHESION)
+                      + goal[0]*GOAL/glen
+                      + enemies[0]*ENEMY_GOAL/elen;
+        double outy = seperation[1]/slen*(SEPERATION - COHESION)
                       + align[1]*ALIGNMENT/alen
                       + collision[1]*COLLISION/clen
-                      + goal[1]*GOAL/glen;
+                      + goal[1]*GOAL/glen
+                      + enemies[1]*ENEMY_GOAL/elen;
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
     }
 
@@ -267,20 +289,26 @@ public abstract class Bot {
         if(status.roundsUntilMovementIdle != 0)
             return;
 
+        rc.setIndicatorString(1, "QMove: " + queuedMoveDirection);
+
+        if(highPriorityEnemy != null)
+            return;
+
         //Have an attack action in our queue.
         //Attack has higher priority, so we concede movement on this round.
         if(rc.hasActionSet()) // && queuedMoveDirection == null && !movementDelay)
             return;
+
 
         //No action on the queue and no direction set, lets find our next move.
         if(queuedMoveDirection == null) {
             Direction flock;
 
             // This needs to be fixed
-            if(status.energonLevel < LOW_HP_THRESH)
-                flock = flock(1, 1, 1, 1, 3);
-            else
-                flock = flock(1, 1, 1, 1, 1);
+            //if(status.energonLevel < LOW_HP_THRESH)
+            //  flock = flock(1, 1, 1, 1, 3, -1);
+            //else
+            flock = flock(1, 1.5, 1, 1, 0, 20);
 
             //If we magically got a direction to our current location, or worse, just quit now.
             if(flock == Direction.OMNI || flock == Direction.NONE)
@@ -437,7 +465,45 @@ public abstract class Bot {
         }
     }
 
+    private final double getAdjacentEnergonAvg() {
+        double total = 0;
+
+        for(int i = 0; i < nNeedEnergon; i++)
+            total += alliedGround[needEnergon[i]].energonLevel;
+
+        return total/nNeedEnergon;
+    }
+    
+    public void transferEnergon() throws Exception {
+        double adjAvg;
+        double toGive;
+
+        if(status.type.isBuilding())
+            return;
+
+        if(status.energonLevel < LOW_HP_THRESH)
+            return;
+
+        adjAvg = getAdjacentEnergonAvg();
+        if(adjAvg > status.energonLevel)
+            return;
+
+        toGive = status.energonLevel - adjAvg;
+        toGive /= nNeedEnergon;
+
+        for(int i = 0; i < nNeedEnergon; i++) {
+            RobotInfo ri = alliedGround[needEnergon[i]];
+            double botEnerNeed = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
+
+            if(botEnerNeed > toGive)
+                botEnerNeed = toGive;
+
+            rc.transferUnitEnergon(botEnerNeed, ri.location, RobotLevel.ON_GROUND);
+        }
+    }
+
     public void yield() {
         rc.yield();
+        rc.setIndicatorString(0, "Dir: " + rc.getDirection());
     }
 }
