@@ -11,8 +11,7 @@ public abstract class Bot {
     protected static final int MAX_MAP_DIM_SQ   = GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT;
     protected final int MAX_GROUP_SZ            = 10;
 
-    protected MapLocation highPriorityArchonEnemy;
-    protected int highPriorityArchonEnemyType;
+    protected RobotInfo highPriorityArchonEnemy;
 
     protected int LOW_HP_THRESH;
 
@@ -251,17 +250,20 @@ public abstract class Bot {
         while ((m = rc.getNextMessage()) != null) {
             if (m.ints == null || m.ints.length < 3) continue;
             if (m.ints[0] != ParsedMsg.chksum(m)) continue;
-            switch (MSGTYPE.values()[m.ints[2]]) {
+            switch (MSGTYPE.values()[m.ints[ParsedMsg.TYPE_I]]) {
             case BEACON:
-                msgQueue.add(new Beacon(m));
+                if (Clock.getRoundNum() - m.ints[ParsedMsg.AGE_I] < Beacon.MAX_AGE)
+                    msgQueue.add(new Beacon(m));
                 break;
             case ATTACK:
-                //msgQueue.add(new Attack(m));
+                if (Clock.getRoundNum() - m.ints[ParsedMsg.AGE_I] < AttackMsg.MAX_AGE)
+                    msgQueue.add(new AttackMsg(m));
                 break;
             }
             if (Clock.getBytecodeNum() - startbc >= MAXBC) break;
         }
-        rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
+        if (!msgQueue.isEmpty()) msgQueue.peek().send(rc);  //Re-broadcast our highest priority... More logic
+        rc.getAllMessages();    //Clear global queue - may lose messages, but they'll be old anyway
     }
 
     //Uses RobotInfo highPriorityEnemy as our target.
@@ -276,7 +278,7 @@ public abstract class Bot {
             return false;
 
        if(status.roundsUntilAttackIdle != 0
-            || (highPriorityArchonEnemy != null && !rc.canAttackSquare(highPriorityArchonEnemy))
+            || (highPriorityArchonEnemy != null && !rc.canAttackSquare(highPriorityArchonEnemy.location))
             || (highPriorityEnemy != null && !rc.canAttackSquare(highPriorityEnemy.location))) {
             return false;
         }
@@ -291,12 +293,12 @@ public abstract class Bot {
         
         //Call the proper attack call if we recv a target from an archon that we can attack.
         if(highPriorityArchonEnemy != null) {
-            if(highPriorityArchonEnemyType == 0) {
-                rc.attackAir(highPriorityArchonEnemy);  
+            if(highPriorityArchonEnemy.type == RobotType.ARCHON) {
+                rc.attackAir(highPriorityArchonEnemy.location);  
             }
 
             else {
-                rc.attackGround(highPriorityArchonEnemy);  
+                rc.attackGround(highPriorityArchonEnemy.location);  
              }
         }
 
@@ -417,9 +419,10 @@ public abstract class Bot {
     		rc.clearBroadcast();
     	
     	
-    	msg.ints = new int[] { RANDOM_SEED, highPriorityArchonEnemyType };
+    	/*msg.ints = new int[] { RANDOM_SEED, highPriorityArchonEnemyType };
     	msg.locations = new MapLocation[] { highPriorityArchonEnemy };
-    	rc.broadcast(msg);
+    	rc.broadcast(msg);*/
+        (new AttackMsg(highPriorityArchonEnemy)).send(rc);
     	
     	if(rc.getBroadcastCost() > status.energonLevel) {
     		rc.clearBroadcast();	
@@ -454,6 +457,7 @@ public abstract class Bot {
         }
     }
     
+/*
     protected void recvHighPriorityEnemy() throws Exception{
         Message[] msgs = rc.getAllMessages();
         int sz = msgs.length;
@@ -490,6 +494,15 @@ public abstract class Bot {
             }
         }
        // sendHighPriorityArchonEnemy();
+*/
+
+    protected void recvHighPriorityEnemy() {
+        if(!(msgQueue.peek() instanceof AttackMsg))    //MsgQueue says attacking isn't important atm.
+            return;
+        RobotInfo am = ((AttackMsg)msgQueue.poll()).info();
+        if (rc.canAttackSquare(am.location)) {
+            highPriorityArchonEnemy = am;
+        }
     }
 
     // Sense the nearby robots
@@ -506,7 +519,6 @@ public abstract class Bot {
         highPriorityAlliedValue = 0;
 
         highPriorityArchonEnemy = null;
-        highPriorityArchonEnemyType = 0;
 
         nAlliedAir = 0;
         nAlliedGround = 0;
