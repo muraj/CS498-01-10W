@@ -335,8 +335,9 @@ public abstract class Bot {
 
             // This needs to be fixed
             //else
+    //public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL, double ENEMY_GOAL) throws Exception {
             if(status.type == RobotType.ARCHON)
-                flock = flock(1, 3, 1, 1, 2, 20);
+                flock = flock(1, 3, 1, 1, 2, 10);
             else {
                 if(status.energonLevel < LOW_HP_THRESH)
                     flock = flock(1, 1, 2, 2, 3, 1000);
