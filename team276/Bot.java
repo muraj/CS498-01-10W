@@ -232,8 +232,9 @@ public abstract class Bot {
         /* AVOID MAP EDGE */
         if(AVOID_MAP_EDGE != 0 && mapBoundry != null) {
             MapLocation oppositeML = status.location.add(mapBoundry.opposite());
-            edge[0] = oppositeML.getX();
-            edge[1] = oppositeML.getY();
+
+            edge[0] = oppositeML.getX() - status.location.getX();
+            edge[1] = oppositeML.getY() - status.location.getY();
         }
 
         /* Calculate Vector lengths */
@@ -256,13 +257,13 @@ public abstract class Bot {
                       + collision[0]*COLLISION/clen
                       + goal[0]*GOAL/glen
                       + enemies[0]*ENEMY_GOAL/elen
-                      - edge[0]*AVOID_MAP_EDGE/melen;
+                      + edge[0]*AVOID_MAP_EDGE/melen;
         double outy = seperation[1]/slen*(SEPERATION - COHESION)
                       + align[1]*ALIGNMENT/alen
                       + collision[1]*COLLISION/clen
                       + goal[1]*GOAL/glen
                       + enemies[1]*ENEMY_GOAL/elen
-                      - edge[1]*AVOID_MAP_EDGE/melen;
+                      + edge[1]*AVOID_MAP_EDGE/melen;
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
     }
 
