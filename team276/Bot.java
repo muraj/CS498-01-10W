@@ -151,11 +151,11 @@ public abstract class Bot {
         hv = (int)ri.maxEnergon - tel;
 
         switch(ri.type) {
-            case ARCHON: return (tel <= LH_ARCHON) ? LH_ARCHON_PV + hv : HH_ARCHON_PV + hv; 
-            case CHAINER: return (tel <= LH_CHAINER) ? LH_CHAINER_PV + hv : HH_CHAINER_PV + hv; 
-            case SOLDIER: return (tel <= LH_SOLDIER) ? LH_SOLDIER_PV + hv : HH_SOLDIER_PV + hv; 
-            case WOUT: return (tel <= LH_WOUT) ? LH_WOUT_PV + hv : HH_WOUT_PV + hv; 
-            case TURRET: return (tel <= LH_TURRET) ? LH_TURRET_PV + hv : HH_TURRET_PV + hv; 
+            case ARCHON: return (tel <= LH_ARCHON) ? LH_ARCHON_PV + hv : HH_ARCHON_PV + hv;
+            case CHAINER: return (tel <= LH_CHAINER) ? LH_CHAINER_PV + hv : HH_CHAINER_PV + hv;
+            case SOLDIER: return (tel <= LH_SOLDIER) ? LH_SOLDIER_PV + hv : HH_SOLDIER_PV + hv;
+            case WOUT: return (tel <= LH_WOUT) ? LH_WOUT_PV + hv : HH_WOUT_PV + hv;
+            case TURRET: return (tel <= LH_TURRET) ? LH_TURRET_PV + hv : HH_TURRET_PV + hv;
 
             // Towers just ignore specializations for now
             case AURA:
@@ -338,6 +338,65 @@ public abstract class Bot {
     }
 
     public void handleMovement() throws Exception {
+        //On movement cooldown, can't do anything here anyways.
+        rc.setIndicatorString(3,"Dir: "+queuedMoveDirection);
+        if (status.roundsUntilMovementIdle != 0)
+            return;
+
+        if (highPriorityEnemy != null && status.type != RobotType.ARCHON)
+            return;
+
+        //Have an attack action in our queue.
+        //Attack has higher priority, so we concede movement on this round.
+        if (rc.hasActionSet() && queuedMoveDirection == null)
+            return;
+        /* WHERE ARE WE GOING? */
+        Direction flock = queuedMoveDirection;
+        if (flock == null) {  //Need a direction!
+            if (status.type == RobotType.ARCHON)
+                flock = flock(1, 5, 1, 0, 0, 3, 5);
+            else {
+                if (status.energonLevel < LOW_HP_THRESH)
+                    flock = flock(1, 2, 2, 0, 10, -2, 0);    //Run away!
+                else
+                    flock = flock(5, 1, 4, 0, 1, 1000, 0);
+            }
+        }
+        if (flock == Direction.OMNI || flock == Direction.NONE) //Flocking failed
+            return;
+        //Check your near three squares if the flock direction isn't valid.
+        if (rc.canMove(flock))
+            queuedMoveDirection = flock;
+        else if (rc.canMove(flock.rotateLeft()))
+            queuedMoveDirection = flock.rotateLeft();
+        else if (rc.canMove(flock.rotateLeft().rotateLeft()))   //Hack, should fix
+            queuedMoveDirection = flock.rotateLeft().rotateLeft();
+        else if (rc.canMove(flock.rotateRight()))
+            queuedMoveDirection = flock.rotateRight();
+        else if (rc.canMove(flock.rotateRight().rotateRight()))   //Hack, should fix
+            queuedMoveDirection = flock.rotateRight().rotateRight();
+        else { //Don't move otherwise, we're stuck.
+            queuedMoveDirection = null;    //Possibly an edge
+            return; //Wait until next round
+        }
+        //queuedMoveDirection *must* be a valid movement spot by this point.
+        //If we're currently facing our target direction...
+        /* MOVE IT! */
+        if (status.directionFacing.equals(queuedMoveDirection)) {
+            rc.moveForward();
+            resetMovementFlags();
+            return;
+        } else if (status.directionFacing.opposite() == queuedMoveDirection) {
+            //If we want to move backward, don't waste the round turning
+            rc.moveBackward();
+            resetMovementFlags();
+            return;
+        } else {
+            rc.setDirection(queuedMoveDirection);   //Turn, waiting til next turn to move.
+        }
+    }
+
+    public void handleMovement2() throws Exception {
         //On movement cooldown, can't do anything here anyways.
         if(status.roundsUntilMovementIdle != 0)
             return;
