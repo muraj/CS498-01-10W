@@ -29,14 +29,12 @@ public class ArchonBot extends Bot {
         while (true) {
             status = rc.senseRobotInfo(self);
             senseNear();
-           // Debugger.debug_print("hpae: " + highPriorityEnemy);
             sendHighPriorityEnemy();
             spawnUnit();
+
             if(didSpawn)
             	transferEnergonArchon();
             transferEnergon();
-            //if(!didSpawn)
-            //	transferEnergon();
 
             if(!didSpawn && status.roundsUntilMovementIdle == 0 && !rc.hasActionSet())
                 handleMovement();

@@ -357,36 +357,9 @@ public abstract class Bot {
             							? flock.rotateLeft()
             							: flock.rotateRight();
 
-            //If we're currently facing our target direction...
-            /*
-            if(status.directionFacing.equals(queuedMoveDirection)) {
-                //If we can move forward, do it.
-                //if(status.id == 92){
-                //	Debugger.debug_print(queuedMoveDirection.toString());	
-                //}
-                if(rc.canMove(queuedMoveDirection)) {
-                	rc.moveForward();
-                    resetMovementFlags();
-                    return;
-                }
-                //If we cant move forward this round, flag our single round delay.
-                else movementDelay = true;
-            } */
-            //If our target destination is behind us, don't change direction...
-         /*   else if(status.directionFacing == queuedMoveDirection.opposite()) {
-                //If we can move backward, do it.
-                if(rc.canMove(queuedMoveDirection.opposite())) {
-                    resetMovementFlags();
-                    rc.moveBackward();
-                    return;
-                }
-                //If we can't move backward, just flag our single round delay.
-                else movementDelay = true;
-            }*/
-           // else {
-            	rc.setDirection(queuedMoveDirection);	
-          //  }
+            rc.setDirection(queuedMoveDirection);
         }
+
         //We have a movement direction in our queue...
         else {
             //If we can move forward, do it.
@@ -664,6 +637,5 @@ public abstract class Bot {
 
     public void yield() {
         rc.yield();
-        rc.setIndicatorString(0, "Dir: " + rc.getDirection());
     }
 }
