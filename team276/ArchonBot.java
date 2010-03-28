@@ -20,12 +20,6 @@ public class ArchonBot extends Bot {
     }
 
     public void AI() throws Exception {
-        status = rc.senseRobotInfo(self);
-        while(status.energonLevel < MINIMUM_ENERGY_TO_SPAWN) {
-            yield();
-            status = rc.senseRobotInfo(self);
-        }
-
         while (true) {
             status = rc.senseRobotInfo(self);
             senseEdge();
