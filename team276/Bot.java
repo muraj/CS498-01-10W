@@ -562,7 +562,7 @@ public abstract class Bot {
         for(int i=0; i<nNeedEnergonArchon; i++)
          	total += alliedAir[needEnergonArchon[i]].energonReserve;
 
-        return total/(nNeedEnergon + nNeedEnergonArchon + 1);
+        return total/(nNeedEnergon + nNeedEnergonArchon);
     }
 
     public void transferEnergon() throws Exception {
@@ -580,9 +580,11 @@ public abstract class Bot {
         if (adjAvg > status.energonLevel)
             return;
 
-        toGive = status.energonLevel - adjAvg;
-        toGive /= (nNeedEnergon + nNeedEnergonArchon + 1);
-        rc.setIndicatorString(1,"toGive: "+toGive+", nNeedEnergon: "+nNeedEnergon+", nArchon: "+nNeedEnergonArchon);
+        toGive = GameConstants.ENERGON_RESERVE_SIZE - adjAvg;
+        toGive = toGive - status.energonLevel < 0 ? status.energonLevel*.1 : toGive;
+        toGive /= (nNeedEnergon + nNeedEnergonArchon);
+
+        rc.setIndicatorString(1,"toGive: "+toGive+", nNeed: "+nNeedEnergon+", nA: "+nNeedEnergonArchon+", adjAvg: "+adjAvg);
         rc.setIndicatorString(2,"hp: "+status.energonLevel);
         for (int i = 0; i < nNeedEnergon; i++) {
             RobotInfo ri = alliedGround[needEnergon[i]];
