@@ -597,8 +597,8 @@ public abstract class Bot {
             }
             else {
             	alliedAir[nAlliedAir++] = tri;	
-            	
-            	if(tri.location.isAdjacentTo(status.location) && tri.energonLevel < LOW_HP_THRESH && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
+
+                if(tri.location.isAdjacentTo(status.location) && tri.energonLevel < tri.maxEnergon && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
                     needEnergonArchon[nNeedEnergonArchon++] = nAlliedAir - 1;
             }
         }
@@ -644,7 +644,7 @@ public abstract class Bot {
             if(status.team.equals(tri.team)) {
                 alliedGround[nAlliedGround++] = tri;
 
-                if(tri.location.isAdjacentTo(status.location) && tri.energonLevel < LOW_HP_THRESH && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
+                if(tri.location.isAdjacentTo(status.location) && tri.energonLevel < tri.maxEnergon && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
                     needEnergon[nNeedEnergon++] = nAlliedGround - 1;
 
                 thpa = calcAlliedPriority(tri);
@@ -685,7 +685,7 @@ public abstract class Bot {
         if(status.type.isBuilding())
             return;
         
-        if(status.energonLevel < LOW_HP_THRESH-15)
+        if(status.energonLevel < status.maxEnergon)
             return;
         
 
