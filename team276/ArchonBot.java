@@ -21,7 +21,7 @@ public class ArchonBot extends Bot {
 
     public void AI() throws Exception {
         status = rc.senseRobotInfo(self);
-        while(status.energonLevel < MINIMUM_ENERGY_TO_SPAWN) {
+        while (status.energonLevel < MINIMUM_ENERGY_TO_SPAWN) {
             yield();
             status = rc.senseRobotInfo(self);
         }
@@ -29,16 +29,16 @@ public class ArchonBot extends Bot {
         while (true) {
             status = rc.senseRobotInfo(self);
             senseNear();
-           // Debugger.debug_print("hpae: " + highPriorityEnemy);
+            // Debugger.debug_print("hpae: " + highPriorityEnemy);
             sendHighPriorityEnemy();
             spawnUnit();
-            if(didSpawn)
-            	transferEnergonArchon();
+            if (didSpawn)
+                transferEnergonArchon();
             transferEnergon();
             //if(!didSpawn)
             //	transferEnergon();
 
-            if(!didSpawn && status.roundsUntilMovementIdle == 0 && !rc.hasActionSet())
+            if (!didSpawn && status.roundsUntilMovementIdle == 0 && !rc.hasActionSet())
                 handleMovement();
 
             yield();
@@ -51,12 +51,12 @@ public class ArchonBot extends Bot {
         MapLocation ahead;
 
         // Give buckets of energon to our new unit
-        if(didSpawn) {
+        if (didSpawn) {
             ahead = status.location.add(status.directionFacing);
             r = rc.senseGroundRobotAtLocation(ahead);
 
-            if(r == null) {
-                if(Clock.getRoundNum() - lastSpawnRound == 0)
+            if (r == null) {
+                if (Clock.getRoundNum() - lastSpawnRound == 0)
                     return;
 
                 didSpawn = false;
@@ -67,21 +67,21 @@ public class ArchonBot extends Bot {
             ri = rc.senseRobotInfo(r);
 
             // Last turn before awakened. Fill it up if we can!
-            if(ri.maxEnergon -  ri.energonLevel < 1) {
+            if (ri.maxEnergon -  ri.energonLevel < 1) {
                 double need = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
                 double toGive = status.energonLevel - MINIMUM_ENERGY_TO_TRANSFER;
 
-                if(need < toGive)
+                if (need < toGive)
                     toGive = need;
 
-                if(toGive > 0)
+                if (toGive > 0)
                     rc.transferUnitEnergon(toGive, ahead, RobotLevel.ON_GROUND);
 
             }
 
             // Give 1 energon until full
-            else if(ri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE) {
-                if(status.energonLevel > MINIMUM_ENERGY_TO_TRANSFER)
+            else if (ri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE) {
+                if (status.energonLevel > MINIMUM_ENERGY_TO_TRANSFER)
                     rc.transferUnitEnergon(1, ahead, RobotLevel.ON_GROUND);
 
             }
@@ -90,19 +90,19 @@ public class ArchonBot extends Bot {
         else {
             double enerToGive = status.energonLevel - MINIMUM_ENERGY_TO_TRANSFER;
 
-            if(enerToGive < 0)
+            if (enerToGive < 0)
                 return;
 
             double perBot = enerToGive/nNeedEnergon;
 
             // Give the peasents around us some energon
-            for(int i = 0; i < nNeedEnergon; i++) {
+            for (int i = 0; i < nNeedEnergon; i++) {
                 ri = alliedGround[needEnergon[i]];
                 double botEnerNeed = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
 
-                if(botEnerNeed > perBot)
+                if (botEnerNeed > perBot)
                     botEnerNeed = perBot;
-                    
+
                 rc.transferUnitEnergon(botEnerNeed, alliedGround[needEnergon[i]].location, RobotLevel.ON_GROUND);
             }
         }
@@ -112,21 +112,21 @@ public class ArchonBot extends Bot {
         MapLocation ahead;
         Robot r;
 
-        if(rc.hasActionSet())
+        if (rc.hasActionSet())
             return false;
 
-        if(didSpawn)
+        if (didSpawn)
             return false;
 
-        if(status.energonLevel < MINIMUM_ENERGY_TO_SPAWN)
+        if (status.energonLevel < MINIMUM_ENERGY_TO_SPAWN)
             return false;
 
         ahead = status.location.add(status.directionFacing);
-        if(rc.senseTerrainTile(ahead).getType() != TerrainTile.TerrainType.LAND)
+        if (rc.senseTerrainTile(ahead).getType() != TerrainTile.TerrainType.LAND)
             return false;
 
         r = rc.senseGroundRobotAtLocation(ahead);
-        if(r != null)
+        if (r != null)
             return false;
 
         return true;
@@ -138,19 +138,19 @@ public class ArchonBot extends Bot {
 
         double ratio = nAlliedGround/nearbyArchons;
 
-       // Debugger.debug_print("Ratio: " + ratio);
+        // Debugger.debug_print("Ratio: " + ratio);
 
-        if(ratio < SOLDIER_TO_ARCHON_RATIO)
+        if (ratio < SOLDIER_TO_ARCHON_RATIO)
             return true;
         return false;
     }
 
     public void spawnUnit() throws Exception {
-        if(!canSpawn())
+        if (!canSpawn())
             return;
 
         // TODO Spawn a unit based on numbers of needed units
-        if(needToSpawn()) {
+        if (needToSpawn()) {
             rc.spawn(RobotType.SOLDIER);
             didSpawn = true;
             lastSpawnRound = Clock.getRoundNum();

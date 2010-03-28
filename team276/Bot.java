@@ -30,10 +30,10 @@ public abstract class Bot {
     protected final RobotInfo[] alliedAir;
     protected final RobotInfo enemyAir[];
     protected final RobotInfo enemyGround[];
-    
+
     protected final int needEnergon[];      // Offsets of the alliedGround array that need energon.
     protected final int needEnergonArchon[]; //offsets into archon array
-    
+
     protected RobotInfo highPriorityEnemy;
     protected RobotInfo highPriorityAlliedGround;
     protected int nAlliedAir;
@@ -88,7 +88,7 @@ public abstract class Bot {
     }
 
     // We assign units a priority based on the scanning robot's ability to attack, "LH" threshold,
-    // and amount of remaining health. Of two robots of the same type and "LH/HH" class, the one 
+    // and amount of remaining health. Of two robots of the same type and "LH/HH" class, the one
     // with lower remaining health should recieve the higher priority.
     public int calcEnemyPriority(RobotInfo ri) {
         // FIXME: Tweak these for best results
@@ -120,7 +120,7 @@ public abstract class Bot {
         // FIXME: If we can't attack as far as we can sense, maybe this should get reworked
         // so that movement "pulls" this bot towards this enemy if it's the only target
         // available. At the same time, that might pull him out of flocking and force a 1v1?
-        if(status.type != RobotType.ARCHON && !rc.canAttackSquare(ri.location))
+        if (status.type != RobotType.ARCHON && !rc.canAttackSquare(ri.location))
             return -1;
 
         // If the game updates the way I *HOPE* it does (the robots energon is calculated at the
@@ -135,22 +135,28 @@ public abstract class Bot {
 
         // If the robot is "dead", ignore it.
         // FIXME: Read above comment.. does this work the way I think/hope it does?
-        if(ri.energonLevel <= 0)
+        if (ri.energonLevel <= 0)
             return -1;
 
         hv = (int)ri.maxEnergon - tel;
 
-        switch(ri.type) {
-            case ARCHON: return (tel <= LH_ARCHON) ? LH_ARCHON_PV + hv : HH_ARCHON_PV + hv; 
-            case CHAINER: return (tel <= LH_CHAINER) ? LH_CHAINER_PV + hv : HH_CHAINER_PV + hv; 
-            case SOLDIER: return (tel <= LH_SOLDIER) ? LH_SOLDIER_PV + hv : HH_SOLDIER_PV + hv; 
-            case WOUT: return (tel <= LH_WOUT) ? LH_WOUT_PV + hv : HH_WOUT_PV + hv; 
-            case TURRET: return (tel <= LH_TURRET) ? LH_TURRET_PV + hv : HH_TURRET_PV + hv; 
+        switch (ri.type) {
+        case ARCHON:
+            return (tel <= LH_ARCHON) ? LH_ARCHON_PV + hv : HH_ARCHON_PV + hv;
+        case CHAINER:
+            return (tel <= LH_CHAINER) ? LH_CHAINER_PV + hv : HH_CHAINER_PV + hv;
+        case SOLDIER:
+            return (tel <= LH_SOLDIER) ? LH_SOLDIER_PV + hv : HH_SOLDIER_PV + hv;
+        case WOUT:
+            return (tel <= LH_WOUT) ? LH_WOUT_PV + hv : HH_WOUT_PV + hv;
+        case TURRET:
+            return (tel <= LH_TURRET) ? LH_TURRET_PV + hv : HH_TURRET_PV + hv;
 
             // Towers just ignore specializations for now
-            case AURA:
-            case TELEPORTER:
-            case COMM: return (tel <= LH_TOWER) ? LH_TOWER_PV + hv : HH_TOWER_PV + hv; 
+        case AURA:
+        case TELEPORTER:
+        case COMM:
+            return (tel <= LH_TOWER) ? LH_TOWER_PV + hv : HH_TOWER_PV + hv;
         }
         return -1;
     }
@@ -167,10 +173,10 @@ public abstract class Bot {
         int len;
 
         len = nAlliedGround;
-        if(len > MAX_GROUP_SZ)
+        if (len > MAX_GROUP_SZ)
             len = MAX_GROUP_SZ;
 
-        for(c = 0; c < len; c++) {
+        for (c = 0; c < len; c++) {
             RobotInfo ri = alliedGround[c];
 
             seperation[0]+= myloc.getX() - ri.location.getX();
@@ -179,16 +185,16 @@ public abstract class Bot {
             align[1]+=ri.directionFacing.dy;
         }
 
-        if(ENEMY_GOAL != 0) {
-            if(nEnemyAir > 0) {
-                for(c = 0; c < nEnemyAir; c++) {
+        if (ENEMY_GOAL != 0) {
+            if (nEnemyAir > 0) {
+                for (c = 0; c < nEnemyAir; c++) {
                     enemies[0] -= myloc.getX() - enemyAir[c].location.getX();
                     enemies[1] -= myloc.getY() - enemyAir[c].location.getY();
                 }
             }
 
-            else if(nEnemyGround > 0) {
-                for(c = 0; c < nEnemyGround; c++) {
+            else if (nEnemyGround > 0) {
+                for (c = 0; c < nEnemyGround; c++) {
                     enemies[0] -= myloc.getX() - enemyGround[c].location.getX();
                     enemies[1] -= myloc.getY() - enemyGround[c].location.getY();
                 }
@@ -272,43 +278,43 @@ public abstract class Bot {
         //  3.) Can't attack the square our enemy is on
         //We can't attack this round. Return out so we can try and move.
 
-        if(highPriorityArchonEnemy == null && highPriorityEnemy == null)
+        if (highPriorityArchonEnemy == null && highPriorityEnemy == null)
             return false;
 
-       if(status.roundsUntilAttackIdle != 0
-            || (highPriorityArchonEnemy != null && !rc.canAttackSquare(highPriorityArchonEnemy))
-            || (highPriorityEnemy != null && !rc.canAttackSquare(highPriorityEnemy.location))) {
+        if (status.roundsUntilAttackIdle != 0
+                || (highPriorityArchonEnemy != null && !rc.canAttackSquare(highPriorityArchonEnemy))
+                || (highPriorityEnemy != null && !rc.canAttackSquare(highPriorityEnemy.location))) {
             return false;
         }
         //Attacking takes higher priority than movement.
         //If we have an action set from the previous round (movement or direction),
         //reset their global flags and remove it from the queue since we have a target to attack.
-        if(rc.hasActionSet()) {
+        if (rc.hasActionSet()) {
             rc.clearAction();
         }
 
         resetMovementFlags();
-        
+
         //Call the proper attack call if we recv a target from an archon that we can attack.
-        if(highPriorityArchonEnemy != null) {
-            if(highPriorityArchonEnemyType == 0) {
-                rc.attackAir(highPriorityArchonEnemy);  
+        if (highPriorityArchonEnemy != null) {
+            if (highPriorityArchonEnemyType == 0) {
+                rc.attackAir(highPriorityArchonEnemy);
             }
 
             else {
-                rc.attackGround(highPriorityArchonEnemy);  
-             }
+                rc.attackGround(highPriorityArchonEnemy);
+            }
         }
 
         //We didn't recv a valid target from an archon message,
         //so attack our best target that we found within our sense range.
-        else if(highPriorityEnemy != null){
-            if(highPriorityEnemy.type == RobotType.ARCHON) {
-                rc.attackAir(highPriorityEnemy.location);  
+        else if (highPriorityEnemy != null) {
+            if (highPriorityEnemy.type == RobotType.ARCHON) {
+                rc.attackAir(highPriorityEnemy.location);
             }
 
             else {
-                rc.attackGround(highPriorityEnemy.location);  
+                rc.attackGround(highPriorityEnemy.location);
             }
         }
 
@@ -317,90 +323,57 @@ public abstract class Bot {
 
     public void handleMovement() throws Exception {
         //On movement cooldown, can't do anything here anyways.
-        if(status.roundsUntilMovementIdle != 0)
+        rc.setIndicatorString(3,"Dir: "+queuedMoveDirection);
+        if (status.roundsUntilMovementIdle != 0)
             return;
 
-        if(highPriorityEnemy != null && status.type != RobotType.ARCHON)
+        if (highPriorityEnemy != null && status.type != RobotType.ARCHON)
             return;
 
         //Have an attack action in our queue.
         //Attack has higher priority, so we concede movement on this round.
-        if(rc.hasActionSet() && queuedMoveDirection == null && !movementDelay)
+        if (rc.hasActionSet() && queuedMoveDirection == null)
             return;
-
-
-        //No action on the queue and no direction set, lets find our next move.
-        if(queuedMoveDirection == null) {
-            Direction flock;
-
-            // This needs to be fixed
-            //else
-            if(status.type == RobotType.ARCHON)
+        /* WHERE ARE WE GOING? */
+        Direction flock = queuedMoveDirection;
+        if (flock == null) {  //Need a direction!
+            if (status.type == RobotType.ARCHON)
                 flock = flock(1, 3, 1, 1, 2, 20);
             else {
-                if(status.energonLevel < LOW_HP_THRESH)
+                if (status.energonLevel < LOW_HP_THRESH)
                     flock = flock(1, 1, 2, 2, 3, 1000);
                 else
                     flock = flock(1, 1, 1, 2, 1, 1000);
             }
 
-            //If we magically got a direction to our current location, or worse, just quit now.
-            if(flock == Direction.OMNI || flock == Direction.NONE)
-                return;
-            
-            //Yeah thats right >.<
-            //Check your front three squares if the flock direction isn't valid.
-            queuedMoveDirection = (rc.canMove(flock)) 
-           							? flock 
-            						: (rc.canMove(flock.rotateLeft()))
-            							? flock.rotateLeft()
-            							: flock.rotateRight();
-
-            //If we're currently facing our target direction...
-            /*
-            if(status.directionFacing.equals(queuedMoveDirection)) {
-                //If we can move forward, do it.
-                //if(status.id == 92){
-                //	Debugger.debug_print(queuedMoveDirection.toString());	
-                //}
-                if(rc.canMove(queuedMoveDirection)) {
-                	rc.moveForward();
-                    resetMovementFlags();
-                    return;
-                }
-                //If we cant move forward this round, flag our single round delay.
-                else movementDelay = true;
-            } */
-            //If our target destination is behind us, don't change direction...
-         /*   else if(status.directionFacing == queuedMoveDirection.opposite()) {
-                //If we can move backward, do it.
-                if(rc.canMove(queuedMoveDirection.opposite())) {
-                    resetMovementFlags();
-                    rc.moveBackward();
-                    return;
-                }
-                //If we can't move backward, just flag our single round delay.
-                else movementDelay = true;
-            }*/
-           // else {
-            	rc.setDirection(queuedMoveDirection);	
-          //  }
         }
-        //We have a movement direction in our queue...
-        else {
-            //If we can move forward, do it.
-            if(rc.canMove(queuedMoveDirection)) {
-                rc.moveForward();
-                resetMovementFlags();
-            }
-            //If we can't move forward...
-            else {
-                if(!movementDelay){
-                    movementDelay = true;
-                    return;
-                }
-                resetMovementFlags();
-            }
+        if (flock == Direction.OMNI || flock == Direction.NONE) //Flocking failed
+            return;
+        //Check your near three squares if the flock direction isn't valid.
+        if (rc.canMove(flock))
+            queuedMoveDirection = flock;
+        else if (rc.canMove(flock.rotateLeft()))
+            queuedMoveDirection = flock.rotateLeft();
+        else if (rc.canMove(flock.rotateRight()))
+            queuedMoveDirection = flock.rotateRight();
+        else { //Don't move otherwise, we're stuck.
+            queuedMoveDirection = null;    //Possibly an edge
+            return; //Wait until next round
+        }
+        //queuedMoveDirection *must* be a valid movement spot by this point.
+        //If we're currently facing our target direction...
+        /* MOVE IT! */
+        if (status.directionFacing.equals(queuedMoveDirection)) {
+            rc.moveForward();
+            resetMovementFlags();
+            return;
+        } else if (status.directionFacing.opposite() == queuedMoveDirection) {
+            //If we want to move backward, don't waste the round turning
+            rc.moveBackward();
+            resetMovementFlags();
+            return;
+        } else {
+            rc.setDirection(queuedMoveDirection);   //Turn, waiting til next turn to move.
         }
     }
 
@@ -408,88 +381,88 @@ public abstract class Bot {
         queuedMoveDirection = null;
         movementDelay = false;
     }
-    
+
     protected void sendHighPriorityArchonEnemy() throws Exception {
-    	if(highPriorityArchonEnemy == null)
-    		return;
-    	
-    	if(rc.hasBroadcastMessage())
-    		rc.clearBroadcast();
-    	
-    	
-    	msg.ints = new int[] { RANDOM_SEED, highPriorityArchonEnemyType };
-    	msg.locations = new MapLocation[] { highPriorityArchonEnemy };
-    	rc.broadcast(msg);
-    	
-    	if(rc.getBroadcastCost() > status.energonLevel) {
-    		rc.clearBroadcast();	
-    	}
+        if (highPriorityArchonEnemy == null)
+            return;
+
+        if (rc.hasBroadcastMessage())
+            rc.clearBroadcast();
+
+
+        msg.ints = new int[] { RANDOM_SEED, highPriorityArchonEnemyType };
+        msg.locations = new MapLocation[] { highPriorityArchonEnemy };
+        rc.broadcast(msg);
+
+        if (rc.getBroadcastCost() > status.energonLevel) {
+            rc.clearBroadcast();
+        }
     }
 
     protected void sendHighPriorityEnemy() throws Exception {
-        if(highPriorityEnemy == null) {
+        if (highPriorityEnemy == null) {
             //Debugger.debug_print("WE DON'T HAVE A TARGET!");
             return;
         }
-        
+
         //If we already have a message in our queue, remove it.
-        if(rc.hasBroadcastMessage()) {
-            rc.clearBroadcast();    
+        if (rc.hasBroadcastMessage()) {
+            rc.clearBroadcast();
         }
-        
+
         //Debugger.debug_print("send high priority enemy");
         //Message contains:
-            //probably chksum some random number in our int array for cheap checks?
-            //ints[0] -- Random seed
-            //ints[1] -- robot type
-            //locations[0] -- MapLocation of our highPriorityEnemy
+        //probably chksum some random number in our int array for cheap checks?
+        //ints[0] -- Random seed
+        //ints[1] -- robot type
+        //locations[0] -- MapLocation of our highPriorityEnemy
         msg.ints = new int[] { RANDOM_SEED, highPriorityEnemy.type.ordinal() };
         msg.locations = new MapLocation[] { highPriorityEnemy.location };
-        
+
         //Debugger.debug_print("ARCHON HIGH PRIORITY ENEMY: " + RobotType.values()[highPriorityEnemy.type.ordinal()] + ", " + highPriorityEnemy.location);
         rc.broadcast(msg);
-        
-        if(rc.getBroadcastCost() > status.energonLevel) {
-            rc.clearBroadcast();    
+
+        if (rc.getBroadcastCost() > status.energonLevel) {
+            rc.clearBroadcast();
         }
     }
-    
-    protected void recvHighPriorityEnemy() throws Exception{
+
+    protected void recvHighPriorityEnemy() throws Exception {
         Message[] msgs = rc.getAllMessages();
         int sz = msgs.length;
-        
-        for(int i=0; i<sz; i++) {
-            
-            if(msgs[i] == null) 
+
+        for (int i=0; i<sz; i++) {
+
+            if (msgs[i] == null)
                 continue;
-            
-            if( msgs[i].ints == null 
-                || msgs[i].ints.length == 0 
-                || msgs[i].ints[0] != RANDOM_SEED) {
-            
-                continue;
-            }
-            
-            if( msgs[i].locations == null 
-                || msgs[i].locations.length == 0
-                || msgs[i].locations[0] == null) {
-            
+
+            if ( msgs[i].ints == null
+                    || msgs[i].ints.length == 0
+                    || msgs[i].ints[0] != RANDOM_SEED) {
+
                 continue;
             }
-            
+
+            if ( msgs[i].locations == null
+                    || msgs[i].locations.length == 0
+                    || msgs[i].locations[0] == null) {
+
+                continue;
+            }
+
             //Debugger.debug_print("Recv enemy.");
             //Debugger.debug_print("Type: " + RobotType.values()[msgs[i].ints[1]]);
             //Debugger.debug_print("Location: " + msgs[i].locations[0].toString());
             //Debugger.debug_print("can attack? " + rc.canAttackSquare(msgs[i].locations[0]));
-            
-            if(rc.canAttackSquare(msgs[i].locations[0])) {
+
+            if (rc.canAttackSquare(msgs[i].locations[0])) {
                 highPriorityArchonEnemy = msgs[i].locations[0];
                 highPriorityArchonEnemyType = msgs[i].ints[1];
                 //sendHighPriorityArchonEnemy();
                 break;
             }
         }
-       // sendHighPriorityArchonEnemy();
+        // sendHighPriorityArchonEnemy();
     }
 
     // Sense the nearby robots
@@ -523,26 +496,25 @@ public abstract class Bot {
 
         // Air units
         len = airUnits.length;
-        if(len > MAX_BOTS_SCAN)
+        if (len > MAX_BOTS_SCAN)
             len = MAX_BOTS_SCAN;
 
         // Only deal with enemy air
-        for(i = 0; i < len; i++) {
+        for (i = 0; i < len; i++) {
             tri = rc.senseRobotInfo(airUnits[i]);
-            
-            if(status.team.equals(tri.team.opponent())) {
+
+            if (status.team.equals(tri.team.opponent())) {
                 enemyAir[nEnemyAir++] = tri;
 
                 thpe = calcEnemyPriority(tri);
-                if(thpe > highPriorityEnemyValue) {
+                if (thpe > highPriorityEnemyValue) {
                     highPriorityEnemyValue = thpe;
                     highPriorityEnemy = tri;
                 }
-            }
-            else {
-            	alliedAir[nAlliedAir++] = tri;	
-            	
-            	if(tri.location.isAdjacentTo(status.location) && tri.energonLevel < LOW_HP_THRESH && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
+            } else {
+                alliedAir[nAlliedAir++] = tri;
+
+                if (tri.location.isAdjacentTo(status.location) && tri.energonLevel < LOW_HP_THRESH && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
                     needEnergonArchon[nNeedEnergonArchon++] = nAlliedAir - 1;
             }
         }
@@ -552,14 +524,14 @@ public abstract class Bot {
         //don't use nAlliedAir though
         alliedArchons = rc.senseAlliedArchons();
         len = alliedArchons.length;
-        
-        for(i=0; i<len; i++) {
-        	thpa = calcAlliedArchonPriority(alliedArchons[i]);
-        	
-        	if(thpa > highPriorityAlliedValue) {
-        		highPriorityAlliedValue = thpa;
-        		highPriorityAlliedArchon = alliedArchons[i];
-        	}
+
+        for (i=0; i<len; i++) {
+            thpa = calcAlliedArchonPriority(alliedArchons[i]);
+
+            if (thpa > highPriorityAlliedValue) {
+                highPriorityAlliedValue = thpa;
+                highPriorityAlliedArchon = alliedArchons[i];
+            }
         }
 
         // Our archons
@@ -579,30 +551,30 @@ public abstract class Bot {
         // Repeat for ground units.
         highPriorityAlliedValue = 0;
         len = groundUnits.length;
-        if(len > MAX_BOTS_SCAN)
+        if (len > MAX_BOTS_SCAN)
             len = MAX_BOTS_SCAN;
 
-        for(i = 0; i < len; i++) {
+        for (i = 0; i < len; i++) {
             tri = rc.senseRobotInfo(groundUnits[i]);
 
-            if(status.team.equals(tri.team)) {
+            if (status.team.equals(tri.team)) {
                 alliedGround[nAlliedGround++] = tri;
 
-                if(tri.location.isAdjacentTo(status.location) && tri.energonLevel < LOW_HP_THRESH && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
+                if (tri.location.isAdjacentTo(status.location) && tri.energonLevel < LOW_HP_THRESH && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
                     needEnergon[nNeedEnergon++] = nAlliedGround - 1;
 
                 thpa = calcAlliedPriority(tri);
-                if(thpa > highPriorityAlliedValue) {
+                if (thpa > highPriorityAlliedValue) {
                     highPriorityAlliedValue = thpa;
                     highPriorityAlliedGround = tri;
                 }
             }
- 
+
             else {
                 enemyGround[nEnemyGround++] = tri;
 
                 thpe = calcEnemyPriority(tri);
-                if(thpe > highPriorityEnemyValue) {
+                if (thpe > highPriorityEnemyValue) {
                     highPriorityEnemyValue = thpe;
                     highPriorityEnemy = tri;
                 }
@@ -613,56 +585,57 @@ public abstract class Bot {
     private final double getAdjacentEnergonAvg() {
         double total = 0;
 
-        for(int i = 0; i < nNeedEnergon; i++)
+        for (int i = 0; i < nNeedEnergon; i++)
             total += alliedGround[needEnergon[i]].energonLevel;
-        
-       // for(int i=0; i<nNeedEnergonArchon; i++)
-       // 	total += alliedAir[needEnergonArchon[i]].energonLevel;
+
+        // for(int i=0; i<nNeedEnergonArchon; i++)
+        // 	total += alliedAir[needEnergonArchon[i]].energonLevel;
 
         return total/(nNeedEnergon + nNeedEnergonArchon);
     }
-    
+
     public void transferEnergon() throws Exception {
         double adjAvg;
         double toGive;
 
-        if(status.type.isBuilding())
+        if (status.type.isBuilding())
             return;
-        
-        if(status.energonLevel < LOW_HP_THRESH-15)
+
+        if (status.energonLevel < LOW_HP_THRESH-15)
             return;
-        
+
 
         adjAvg = getAdjacentEnergonAvg();
-        if(adjAvg > status.energonLevel)
+        if (adjAvg > status.energonLevel)
             return;
 
         toGive = status.energonLevel - adjAvg;
         toGive /= (nNeedEnergon + nNeedEnergonArchon);
 
-        for(int i = 0; i < nNeedEnergon; i++) {
+        for (int i = 0; i < nNeedEnergon; i++) {
             RobotInfo ri = alliedGround[needEnergon[i]];
             double botEnerNeed = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
 
-            if(botEnerNeed > toGive)
+            if (botEnerNeed > toGive)
                 botEnerNeed = toGive;
 
             rc.transferUnitEnergon(botEnerNeed, ri.location, RobotLevel.ON_GROUND);
         }
-        
-        for(int i=0; i<nNeedEnergonArchon; i++) {
-        	RobotInfo ri = alliedAir[needEnergonArchon[i]];
-        	double energonNeeded = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
-        	
-        	if(energonNeeded > toGive)
-        		energonNeeded = toGive;
-        	
-        	rc.transferUnitEnergon(energonNeeded, ri.location, RobotLevel.IN_AIR);
+
+        for (int i=0; i<nNeedEnergonArchon; i++) {
+            RobotInfo ri = alliedAir[needEnergonArchon[i]];
+            double energonNeeded = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
+
+            if (energonNeeded > toGive)
+                energonNeeded = toGive;
+
+            rc.transferUnitEnergon(energonNeeded, ri.location, RobotLevel.IN_AIR);
         }
     }
 
-    public void yield() {
+    public void yield() throws Exception {
         rc.yield();
         rc.setIndicatorString(0, "Dir: " + rc.getDirection());
+        status = rc.senseRobotInfo(self);   //Latest and greatest info
     }
 }
