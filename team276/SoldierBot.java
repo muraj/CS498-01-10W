@@ -20,8 +20,10 @@ public class SoldierBot extends Bot {
             senseNear();
             recvHighPriorityEnemy();
             transferEnergon();
+
             if(!attack())
             	handleMovement();
+
             rc.yield();
         }
     }
