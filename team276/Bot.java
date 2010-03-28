@@ -162,8 +162,8 @@ public abstract class Bot {
         return rc;
     }
 
-    public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL, double ENEMY_GOAL) throws Exception {
-        int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2], enemies=new int[2];
+    public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL, double ENEMY_GOAL, double AVOID_MAP_EDGE) throws Exception {
+        int[] seperation=new int[2], align=new int[2], goal=new int[2], collision=new int[2], enemies=new int[2], edge=new int[2];
         MapLocation myloc = status.location;
         /* General swarm */
         int c = 0;
@@ -222,29 +222,41 @@ public abstract class Bot {
             }
         }
 
-        /* Calculate Vector lengths */
-        double slen = Util.ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
-        double alen = Util.ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
-        double clen = Util.ZERO.distanceSquaredTo(new MapLocation(collision[0], collision[1]));
-        double glen = GOAL != 0 ? Math.sqrt(Util.ZERO.distanceSquaredTo(new MapLocation(goal[0], goal[1]))) : 1;
-        double elen = Util.ZERO.distanceSquaredTo(new MapLocation(enemies[0], enemies[1]));
+        /* AVOID MAP EDGE */
+        if(AVOID_MAP_EDGE != 0 && mapBoundry != null) {
+            MapLocation oppositeML = status.location.add(mapBoundry.opposite());
+            Debugger.debug_print("mb: " + mapBoundry + " oml: " + status.location.directionTo(oppositeML));
+            edge[0] = oppositeML.getX();
+            edge[1] = oppositeML.getY();
+        }
 
-        slen = slen == 0 ? 1 : Math.sqrt(slen);    //Prevent divide by zero
-        alen = alen == 0 ? 1 : Math.sqrt(alen);
-        clen = clen == 0 ? 1 : Math.sqrt(clen);
-        elen = elen == 0 ? 1 : Math.sqrt(elen);
+        /* Calculate Vector lengths */
+        double slen  = Util.ZERO.distanceSquaredTo(new MapLocation(seperation[0], seperation[1]));
+        double alen  = Util.ZERO.distanceSquaredTo(new MapLocation(align[0], align[1]));
+        double clen  = Util.ZERO.distanceSquaredTo(new MapLocation(collision[0], collision[1]));
+        double glen  = GOAL != 0 ? Math.sqrt(Util.ZERO.distanceSquaredTo(new MapLocation(goal[0], goal[1]))) : 1;
+        double elen  = Util.ZERO.distanceSquaredTo(new MapLocation(enemies[0], enemies[1]));
+        double melen = Util.ZERO.distanceSquaredTo(new MapLocation(edge[0], edge[1]));
+
+        slen  = slen  == 0 ? 1 : Math.sqrt(slen);    //Prevent divide by zero
+        alen  = alen  == 0 ? 1 : Math.sqrt(alen);
+        clen  = clen  == 0 ? 1 : Math.sqrt(clen);
+        elen  = elen  == 0 ? 1 : Math.sqrt(elen);
+        melen = melen == 0 ? 1 : Math.sqrt(melen);
 
         /* Sum the vectors */
         double outx = seperation[0]/slen*(SEPERATION - COHESION)    //Cohesion == -Seperation
                       + align[0]*ALIGNMENT/alen
                       + collision[0]*COLLISION/clen
                       + goal[0]*GOAL/glen
-                      + enemies[0]*ENEMY_GOAL/elen;
+                      + enemies[0]*ENEMY_GOAL/elen
+                      - edge[0]*AVOID_MAP_EDGE/melen;
         double outy = seperation[1]/slen*(SEPERATION - COHESION)
                       + align[1]*ALIGNMENT/alen
                       + collision[1]*COLLISION/clen
                       + goal[1]*GOAL/glen
-                      + enemies[1]*ENEMY_GOAL/elen;
+                      + enemies[1]*ENEMY_GOAL/elen
+                      - edge[1]*AVOID_MAP_EDGE/melen;
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
     }
 
@@ -338,14 +350,15 @@ public abstract class Bot {
 
             // This needs to be fixed
             //else
-    //public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL, double ENEMY_GOAL) throws Exception {
+            //public Direction flock(double SEPERATION, double COHESION, double ALIGNMENT, double COLLISION, double GOAL, double ENEMY_GOAL, double AVOID_MAP_EDGE) throws Exception {
             if(status.type == RobotType.ARCHON)
-                flock = flock(1, 3, 1, 1, 2, 10);
+                flock = flock(1, 3, 1, 1, 2, 10, 5);
+
             else {
                 if(status.energonLevel < LOW_HP_THRESH)
-                    flock = flock(1, 1, 2, 2, 3, 1000);
+                    flock = flock(1, 1, 2, 2, 3, 1000, 0);
                 else
-                    flock = flock(1, 1, 1, 2, 1, 1000);
+                    flock = flock(1, 1, 1, 2, 1, 1000, 0);
             }
 
             //If we magically got a direction to our current location, or worse, just quit now.
