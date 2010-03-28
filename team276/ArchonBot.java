@@ -64,7 +64,7 @@ public class ArchonBot extends Bot {
             }
 
             ri = rc.senseRobotInfo(r);
-
+            if (ri.team != status.team) return;
             // Last turn before awakened. Fill it up if we can!
             if (ri.maxEnergon -  ri.energonLevel < 1) {
                 double need = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;

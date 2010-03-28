@@ -21,6 +21,7 @@ public class RobotPlayer implements Runnable {
                     break;
                 } else {
                     try {
+                        b.yield();
                         createBot(b.getRC());	//If we're not debugging, 'save' the bot by resetting it.
                     } catch (Exception e2) {
                         break;

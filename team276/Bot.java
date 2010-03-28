@@ -11,8 +11,7 @@ public abstract class Bot {
     protected static final int MAX_MAP_DIM_SQ   = GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT;
     protected final int MAX_GROUP_SZ            = 10;
 
-    protected MapLocation highPriorityArchonEnemy;
-    protected int highPriorityArchonEnemyType;
+    protected RobotInfo highPriorityArchonEnemy;
 
     protected double LOW_HP_THRESH;
 
@@ -187,17 +186,23 @@ public abstract class Bot {
         }
 
         if (ENEMY_GOAL != 0) {
+            if (msgQueue.peek() instanceof AttackMsg) {
+                RobotInfo m = ((AttackMsg)msgQueue.peek()).info();
+                rc.setIndicatorString(2,"GOAL: "+m.id);
+                enemies[0] += m.location.getX() - myloc.getX();
+                enemies[1] += m.location.getY() - myloc.getY();
+            }
             if (nEnemyAir > 0) {
                 for (c = 0; c < nEnemyAir; c++) {
-                    enemies[0] -= myloc.getX() - enemyAir[c].location.getX();
-                    enemies[1] -= myloc.getY() - enemyAir[c].location.getY();
+                    enemies[0] += enemyAir[c].location.getX() - myloc.getX();
+                    enemies[1] += enemyAir[c].location.getY() - myloc.getY();
                 }
             }
 
             else if (nEnemyGround > 0) {
                 for (c = 0; c < nEnemyGround; c++) {
-                    enemies[0] -= myloc.getX() - enemyGround[c].location.getX();
-                    enemies[1] -= myloc.getY() - enemyGround[c].location.getY();
+                    enemies[0] += enemyGround[c].location.getX() - myloc.getX();
+                    enemies[1] += enemyGround[c].location.getY() - myloc.getY();
                 }
             }
         }
@@ -286,7 +291,7 @@ public abstract class Bot {
             return false;
 
         if (status.roundsUntilAttackIdle != 0
-                || (highPriorityArchonEnemy != null && !rc.canAttackSquare(highPriorityArchonEnemy))
+                || (highPriorityArchonEnemy != null && !rc.canAttackSquare(highPriorityArchonEnemy.location))
                 || (highPriorityEnemy != null && !rc.canAttackSquare(highPriorityEnemy.location))) {
             return false;
         }
@@ -301,13 +306,10 @@ public abstract class Bot {
 
         //Call the proper attack call if we recv a target from an archon that we can attack.
         if (highPriorityArchonEnemy != null) {
-            if (highPriorityArchonEnemyType == 0) {
-                rc.attackAir(highPriorityArchonEnemy);
-            }
-
-            else {
-                rc.attackGround(highPriorityArchonEnemy);
-            }
+            if(highPriorityArchonEnemy.type == RobotType.ARCHON)
+                rc.attackAir(highPriorityArchonEnemy.location);
+            else
+                rc.attackGround(highPriorityArchonEnemy.location);
         }
 
         //We didn't recv a valid target from an archon message,
@@ -342,12 +344,12 @@ public abstract class Bot {
         Direction flock = queuedMoveDirection;
         if (flock == null) {  //Need a direction!
             if (status.type == RobotType.ARCHON)
-                flock = flock(1, 5, 1, 0, 0, 3);
+                flock = flock(1, 5, 1, 0, 0, 0);
             else {
-                if (status.energonLevel < LOW_HP_THRESH)
-                    flock = flock(1, 2, 2, 0, 10, -2);    //Run away!
-                else
-                    flock = flock(5, 1, 4, 0, 1, 1000);
+//                if (status.energonLevel < LOW_HP_THRESH)
+//                    flock = flock(1, 2, 2, 0, 10, -2);    //Run away!
+//               else
+                    flock = flock(5, 10, 0, 0, 1, 10);
             }
 
         }
@@ -397,10 +399,7 @@ public abstract class Bot {
         if (rc.hasBroadcastMessage())
             rc.clearBroadcast();
 
-
-        msg.ints = new int[] { RANDOM_SEED, highPriorityArchonEnemyType };
-        msg.locations = new MapLocation[] { highPriorityArchonEnemy };
-        rc.broadcast(msg);
+        (new AttackMsg(highPriorityArchonEnemy)).send(rc);
 
         if (rc.getBroadcastCost() > status.energonLevel) {
             rc.clearBroadcast();
@@ -435,11 +434,8 @@ public abstract class Bot {
         if(!(msgQueue.peek() instanceof AttackMsg))    //MsgQueue says attacking isn't important atm.
             return;
         RobotInfo am = ((AttackMsg)msgQueue.poll()).info();
-        if (rc.canAttackSquare(am.location)) {
-            highPriorityArchonEnemy = am.location;
-            highPriorityArchonEnemyType = am.type.ordinal();
-        }
-        // sendHighPriorityArchonEnemy();
+        if (rc.canAttackSquare(am.location))
+            highPriorityArchonEnemy = am;
     }
 
     // Sense the nearby robots
@@ -456,7 +452,6 @@ public abstract class Bot {
         highPriorityAlliedValue = 0;
 
         highPriorityArchonEnemy = null;
-        highPriorityArchonEnemyType = 0;
 
         nAlliedAir = 0;
         nAlliedGround = 0;
