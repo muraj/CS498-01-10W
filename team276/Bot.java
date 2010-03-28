@@ -159,7 +159,7 @@ public abstract class Bot {
 
             // Towers just ignore specializations for now
             case AURA:
-            case TELEPORTER:
+            case TELEPORTER: return (tel <= LH_TOWER) ? LH_TOWER_PV + hv + 50  : HH_TOWER_PV + hv;
             case COMM: return (tel <= LH_TOWER) ? LH_TOWER_PV + hv : HH_TOWER_PV + hv; 
         }
         return -1;
