@@ -645,9 +645,8 @@ public abstract class Bot {
         if(status.type.isBuilding())
             return;
         
-        if(status.energonLevel < status.maxEnergon)
+        if(status.energonLevel < status.maxEnergon - 15)
             return;
-        
 
         adjAvg = getAdjacentEnergonAvg();
         if(adjAvg > status.energonLevel)
