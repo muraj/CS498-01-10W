@@ -85,10 +85,6 @@ public abstract class Bot {
         this.mapBoundry = null;
     }
 
-    public final void resetMsgQueue() {
-        msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
-    }
-
     public int calcAlliedArchonPriority(MapLocation ml) {
         return MAX_MAP_DIM_SQ - status.location.distanceSquaredTo(ml);
     }
@@ -265,25 +261,6 @@ public abstract class Bot {
                       + enemies[1]*ENEMY_GOAL/elen
                       + edge[1]*AVOID_MAP_EDGE/melen;
         return Util.coordToDirection((int)(outx*10), (int)(outy*10));
-    }
-
-    public final void processMsgs(int MAXBC) throws Exception {
-        Message m;
-        int startbc = Clock.getBytecodeNum();
-        while ((m = rc.getNextMessage()) != null) {
-            if (m.ints == null || m.ints.length < 3) continue;
-            if (m.ints[0] != ParsedMsg.chksum(m)) continue;
-            switch (MSGTYPE.values()[m.ints[2]]) {
-            case BEACON:
-                msgQueue.add(new Beacon(m));
-                break;
-            case ATTACK:
-                //msgQueue.add(new Attack(m));
-                break;
-            }
-            if (Clock.getBytecodeNum() - startbc >= MAXBC) break;
-        }
-        rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
     }
 
     //Uses RobotInfo highPriorityEnemy as our target.
@@ -618,20 +595,6 @@ public abstract class Bot {
         	}
         }
 
-        // Our archons
-        /*
-        for(nAlliedAir = 0; nAlliedAir < len; nAlliedAir++) {
-            thpa = calcAlliedArchonPriority(alliedArchons[nAlliedAir]);
-
-            if(thpa > highPriorityAlliedValue) {
-                highPriorityAlliedValue = thpa;
-                highPriorityAlliedArchon = alliedArchons[nAlliedAir];
-            }
-        }
-
-        nAlliedAir++;
-        */
-
         // Repeat for ground units.
         highPriorityAlliedValue = 0;
         len = groundUnits.length;
@@ -672,9 +635,6 @@ public abstract class Bot {
         for(int i = 0; i < nNeedEnergon; i++)
             total += alliedGround[needEnergon[i]].energonLevel;
         
-       // for(int i=0; i<nNeedEnergonArchon; i++)
-       // 	total += alliedAir[needEnergonArchon[i]].energonLevel;
-
         return total/(nNeedEnergon + nNeedEnergonArchon);
     }
     
