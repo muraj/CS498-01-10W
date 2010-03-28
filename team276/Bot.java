@@ -11,6 +11,11 @@ public abstract class Bot {
     protected static final int MAX_MAP_DIM_SQ   = GameConstants.MAP_MAX_HEIGHT*GameConstants.MAP_MAX_HEIGHT;
     protected final int MAX_GROUP_SZ            = 10;
 
+    protected static final int NORTH = 0x01;
+    protected static final int EAST  = 0x02;
+    protected static final int SOUTH = 0x04;
+    protected static final int WEST  = 0x08;
+
     protected MapLocation highPriorityArchonEnemy;
     protected int highPriorityArchonEnemyType;
 
@@ -43,6 +48,7 @@ public abstract class Bot {
     protected int nEnemyAir;
     protected int nEnemyGround;
 
+    private static MapLocation edges[];
     protected Direction mapBoundry;
 
     protected Direction queuedMoveDirection;
@@ -75,6 +81,7 @@ public abstract class Bot {
         this.queuedMoveDirection = null;
         this.LOW_HP_THRESH = 10;
         this.highPriorityArchonEnemy = null;
+        this.edges = new MapLocation[9];
         this.mapBoundry = null;
     }
 
@@ -225,7 +232,6 @@ public abstract class Bot {
         /* AVOID MAP EDGE */
         if(AVOID_MAP_EDGE != 0 && mapBoundry != null) {
             MapLocation oppositeML = status.location.add(mapBoundry.opposite());
-            Debugger.debug_print("mb: " + mapBoundry + " oml: " + status.location.directionTo(oppositeML));
             edge[0] = oppositeML.getX();
             edge[1] = oppositeML.getY();
         }
@@ -648,6 +654,41 @@ public abstract class Bot {
         		energonNeeded = toGive;
         	
         	rc.transferUnitEnergon(energonNeeded, ri.location, RobotLevel.IN_AIR);
+        }
+    }
+
+    // Sense the outermost edges to see if we're running into a map boundry
+    public void senseEdge() {
+        TerrainTile.TerrainType sensedEdges[] = new TerrainTile.TerrainType[9]; 
+        int dx = status.location.getX();
+        int dy = status.location.getY();
+        int total = 0;
+
+        edges[NORTH] = new MapLocation(dx, dy - 6);
+        edges[EAST] = new MapLocation(dx + 6, dy);
+        edges[SOUTH] = new MapLocation(dx, dy + 6);
+        edges[WEST] = new MapLocation(dx - 6, dy);
+
+        sensedEdges[NORTH] = rc.senseTerrainTile(edges[NORTH]).getType();
+        sensedEdges[EAST] = rc.senseTerrainTile(edges[EAST]).getType();
+        sensedEdges[SOUTH] = rc.senseTerrainTile(edges[SOUTH]).getType();
+        sensedEdges[WEST] = rc.senseTerrainTile(edges[WEST]).getType();
+
+        total += (sensedEdges[NORTH] == TerrainTile.TerrainType.OFF_MAP) ? NORTH : 0;
+        total += (sensedEdges[EAST]  == TerrainTile.TerrainType.OFF_MAP) ? EAST  : 0;
+        total += (sensedEdges[SOUTH] == TerrainTile.TerrainType.OFF_MAP) ? SOUTH : 0;
+        total += (sensedEdges[WEST]  == TerrainTile.TerrainType.OFF_MAP) ? WEST  : 0;
+
+        switch(total) {
+            case NORTH:         mapBoundry = Direction.NORTH;       break;
+            case EAST:          mapBoundry = Direction.EAST;        break;
+            case SOUTH:         mapBoundry = Direction.SOUTH;       break;
+            case WEST:          mapBoundry = Direction.WEST;        break;
+            case NORTH+EAST:    mapBoundry = Direction.NORTH_EAST;  break;
+            case NORTH+WEST:    mapBoundry = Direction.NORTH_WEST;  break;
+            case SOUTH+EAST:    mapBoundry = Direction.SOUTH_EAST;  break;
+            case SOUTH+WEST:    mapBoundry = Direction.SOUTH_WEST;  break;
+            default:            mapBoundry = null;
         }
     }
 

@@ -8,14 +8,8 @@ public class ArchonBot extends Bot {
     private static final int MINIMUM_ENERGY_TO_TRANSFER = 25;
     private static final int UNITENERGY_TRANSFER = 10;
     private static final double SOLDIER_TO_ARCHON_RATIO = 3;
-    private static MapLocation edges[];
     private boolean didSpawn;
     private int lastSpawnRound;
-
-    private static final int NORTH = 0x01;
-    private static final int EAST  = 0x02;
-    private static final int SOUTH = 0x04;
-    private static final int WEST  = 0x08;
 
     public ArchonBot(RobotController rc) throws Exception {
         super(rc);
@@ -23,7 +17,6 @@ public class ArchonBot extends Bot {
         didSpawn = false;
         lastSpawnRound = 0;
         this.LOW_HP_THRESH = 75;
-        this.edges = new MapLocation[9];
     }
 
     public void AI() throws Exception {
@@ -48,41 +41,6 @@ public class ArchonBot extends Bot {
                 handleMovement();
 
             yield();
-        }
-    }
-
-    // Sense the outermost edges to see if we're running into a map boundry
-    private void senseEdge() {
-        TerrainTile.TerrainType sensedEdges[] = new TerrainTile.TerrainType[9]; 
-        int dx = status.location.getX();
-        int dy = status.location.getY();
-        int total = 0;
-
-        edges[NORTH] = new MapLocation(dx, dy - 6);
-        edges[EAST] = new MapLocation(dx + 6, dy);
-        edges[SOUTH] = new MapLocation(dx, dy + 6);
-        edges[WEST] = new MapLocation(dx - 6, dy);
-
-        sensedEdges[NORTH] = rc.senseTerrainTile(edges[NORTH]).getType();
-        sensedEdges[EAST] = rc.senseTerrainTile(edges[EAST]).getType();
-        sensedEdges[SOUTH] = rc.senseTerrainTile(edges[SOUTH]).getType();
-        sensedEdges[WEST] = rc.senseTerrainTile(edges[WEST]).getType();
-
-        total += (sensedEdges[NORTH] == TerrainTile.TerrainType.OFF_MAP) ? NORTH : 0;
-        total += (sensedEdges[EAST]  == TerrainTile.TerrainType.OFF_MAP) ? EAST  : 0;
-        total += (sensedEdges[SOUTH] == TerrainTile.TerrainType.OFF_MAP) ? SOUTH : 0;
-        total += (sensedEdges[WEST]  == TerrainTile.TerrainType.OFF_MAP) ? WEST  : 0;
-
-        switch(total) {
-            case NORTH:         mapBoundry = Direction.NORTH;       break;
-            case EAST:          mapBoundry = Direction.EAST;        break;
-            case SOUTH:         mapBoundry = Direction.SOUTH;       break;
-            case WEST:          mapBoundry = Direction.WEST;        break;
-            case NORTH+EAST:    mapBoundry = Direction.NORTH_EAST;  break;
-            case NORTH+WEST:    mapBoundry = Direction.NORTH_WEST;  break;
-            case SOUTH+EAST:    mapBoundry = Direction.SOUTH_EAST;  break;
-            case SOUTH+WEST:    mapBoundry = Direction.SOUTH_WEST;  break;
-            default:            mapBoundry = null;
         }
     }
 
