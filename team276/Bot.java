@@ -556,14 +556,13 @@ public abstract class Bot {
 
     private final double getAdjacentEnergonAvg() {
         double total = 0;
-
         for (int i = 0; i < nNeedEnergon; i++)
-            total += alliedGround[needEnergon[i]].energonLevel;
+            total += alliedGround[needEnergon[i]].energonReserve;
 
-        // for(int i=0; i<nNeedEnergonArchon; i++)
-        // 	total += alliedAir[needEnergonArchon[i]].energonLevel;
+        for(int i=0; i<nNeedEnergonArchon; i++)
+         	total += alliedAir[needEnergonArchon[i]].energonReserve;
 
-        return total/(nNeedEnergon + nNeedEnergonArchon);
+        return total/(nNeedEnergon + nNeedEnergonArchon + 1);
     }
 
     public void transferEnergon() throws Exception {
@@ -582,8 +581,9 @@ public abstract class Bot {
             return;
 
         toGive = status.energonLevel - adjAvg;
-        toGive /= (nNeedEnergon + nNeedEnergonArchon);
-
+        toGive /= (nNeedEnergon + nNeedEnergonArchon + 1);
+        rc.setIndicatorString(1,"toGive: "+toGive+", nNeedEnergon: "+nNeedEnergon+", nArchon: "+nNeedEnergonArchon);
+        rc.setIndicatorString(2,"hp: "+status.energonLevel);
         for (int i = 0; i < nNeedEnergon; i++) {
             RobotInfo ri = alliedGround[needEnergon[i]];
             double botEnerNeed = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
