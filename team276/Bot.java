@@ -14,7 +14,7 @@ public abstract class Bot {
     protected MapLocation highPriorityArchonEnemy;
     protected int highPriorityArchonEnemyType;
 
-    protected int LOW_HP_THRESH;
+    protected double LOW_HP_THRESH;
 
     protected final RobotController rc;
     protected final Robot self;
@@ -71,7 +71,7 @@ public abstract class Bot {
         this.nEnemyAir = 0;
         this.nEnemyGround = 0;
         this.queuedMoveDirection = null;
-        this.LOW_HP_THRESH = 10;
+        this.LOW_HP_THRESH = rc.getRobotType().maxEnergon()*.25;
         this.highPriorityArchonEnemy = null;
     }
 
@@ -338,12 +338,12 @@ public abstract class Bot {
         Direction flock = queuedMoveDirection;
         if (flock == null) {  //Need a direction!
             if (status.type == RobotType.ARCHON)
-                flock = flock(1, 3, 1, 1, 2, 20);
+                flock = flock(1, 5, 1, 0, 0, 3);
             else {
                 if (status.energonLevel < LOW_HP_THRESH)
-                    flock = flock(1, 1, 2, 2, 3, 1000);
+                    flock = flock(1, 2, 2, 0, 10, -2);    //Run away!
                 else
-                    flock = flock(1, 1, 1, 2, 1, 1000);
+                    flock = flock(5, 1, 4, 0, 1, 1000);
             }
 
         }
@@ -354,8 +354,12 @@ public abstract class Bot {
             queuedMoveDirection = flock;
         else if (rc.canMove(flock.rotateLeft()))
             queuedMoveDirection = flock.rotateLeft();
+        else if (rc.canMove(flock.rotateLeft().rotateLeft()))   //Hack, should fix
+            queuedMoveDirection = flock.rotateLeft().rotateLeft();
         else if (rc.canMove(flock.rotateRight()))
             queuedMoveDirection = flock.rotateRight();
+        else if (rc.canMove(flock.rotateRight().rotateRight()))   //Hack, should fix
+            queuedMoveDirection = flock.rotateRight().rotateRight();
         else { //Don't move otherwise, we're stuck.
             queuedMoveDirection = null;    //Possibly an edge
             return; //Wait until next round
