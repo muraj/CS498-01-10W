@@ -81,7 +81,7 @@ public abstract class Bot {
         this.queuedMoveDirection = null;
         this.LOW_HP_THRESH = 10;
         this.highPriorityArchonEnemy = null;
-        this.edges = new MapLocation[9];
+        this.edges = null;
         this.mapBoundry = null;
     }
 
@@ -659,7 +659,7 @@ public abstract class Bot {
 
     // Sense the outermost edges to see if we're running into a map boundry
     public void senseEdge() {
-        TerrainTile.TerrainType sensedEdges[] = new TerrainTile.TerrainType[9]; 
+        TerrainTile.TerrainType sensedEdges[];
         int dx = status.location.getX();
         int dy = status.location.getY();
         int total = 0;
