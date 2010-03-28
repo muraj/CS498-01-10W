@@ -19,7 +19,7 @@ public abstract class Bot {
     protected MapLocation highPriorityArchonEnemy;
     protected int highPriorityArchonEnemyType;
 
-    protected int LOW_HP_THRESH;
+    protected double LOW_HP_THRESH;
 
     protected final RobotController rc;
     protected final Robot self;
@@ -79,7 +79,7 @@ public abstract class Bot {
         this.nEnemyAir = 0;
         this.nEnemyGround = 0;
         this.queuedMoveDirection = null;
-        this.LOW_HP_THRESH = 10;
+        this.LOW_HP_THRESH = rc.getRobotType().maxEnergon()*25;
         this.highPriorityArchonEnemy = null;
         this.edges = new MapLocation[9];
         this.mapBoundry = null;
