@@ -43,6 +43,8 @@ public abstract class Bot {
     protected int nEnemyAir;
     protected int nEnemyGround;
 
+    protected Direction mapBoundry;
+
     protected Direction queuedMoveDirection;
     protected boolean movementDelay = false;
     protected Message msg = new Message();
@@ -73,6 +75,7 @@ public abstract class Bot {
         this.queuedMoveDirection = null;
         this.LOW_HP_THRESH = 10;
         this.highPriorityArchonEnemy = null;
+        this.mapBoundry = null;
     }
 
     public final void resetMsgQueue() {
