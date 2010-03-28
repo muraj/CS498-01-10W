@@ -748,7 +748,6 @@ public abstract class Bot {
             case NORTH+WEST:    mapBoundry = Direction.NORTH_WEST;  break;
             case SOUTH+EAST:    mapBoundry = Direction.SOUTH_EAST;  break;
             case SOUTH+WEST:    mapBoundry = Direction.SOUTH_WEST;  break;
-            default:            mapBoundry = null;
         }
     }
 
