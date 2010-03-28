@@ -76,6 +76,7 @@ public abstract class Bot {
     }
 
     public final void resetMsgQueue() {
+        //msgQueue.clear();   //Cheaper to make a new one?
         msgQueue = new PriorityQueue<ParsedMsg>(10, new Util.MessageComparator());
     }
 
@@ -257,17 +258,20 @@ public abstract class Bot {
         while ((m = rc.getNextMessage()) != null) {
             if (m.ints == null || m.ints.length < 3) continue;
             if (m.ints[0] != ParsedMsg.chksum(m)) continue;
-            switch (MSGTYPE.values()[m.ints[2]]) {
+            switch (MSGTYPE.values()[m.ints[ParsedMsg.TYPE_I]]) {
             case BEACON:
-                msgQueue.add(new Beacon(m));
+                if (Clock.getRoundNum() - m.ints[ParsedMsg.AGE_I] < Beacon.MAX_AGE)
+                    msgQueue.add(new Beacon(m));
                 break;
             case ATTACK:
-                //msgQueue.add(new Attack(m));
+                if (Clock.getRoundNum() - m.ints[ParsedMsg.AGE_I] < AttackMsg.MAX_AGE)
+                    msgQueue.add(new AttackMsg(m));
                 break;
             }
             if (Clock.getBytecodeNum() - startbc >= MAXBC) break;
         }
-        rc.getAllMessages();    //Clear global queue - may loose messages, but they'll be old anyway
+        if (!msgQueue.isEmpty()) msgQueue.peek().send(rc);  //Re-broadcast our highest priority... More logic
+        rc.getAllMessages();    //Clear global queue - may lose messages, but they'll be old anyway
     }
 
     //Uses RobotInfo highPriorityEnemy as our target.
@@ -324,7 +328,7 @@ public abstract class Bot {
     public void handleMovement() throws Exception {
         //On movement cooldown, can't do anything here anyways.
         rc.setIndicatorString(3,"Dir: "+queuedMoveDirection);
-        if (status.roundsUntilMovementIdle != 0)
+        if (status.roundsUntilMovementIdle != 0 || rc.hasActionSet())
             return;
 
         if (highPriorityEnemy != null && status.type != RobotType.ARCHON)
@@ -420,51 +424,20 @@ public abstract class Bot {
         //ints[0] -- Random seed
         //ints[1] -- robot type
         //locations[0] -- MapLocation of our highPriorityEnemy
-        msg.ints = new int[] { RANDOM_SEED, highPriorityEnemy.type.ordinal() };
-        msg.locations = new MapLocation[] { highPriorityEnemy.location };
-
-        //Debugger.debug_print("ARCHON HIGH PRIORITY ENEMY: " + RobotType.values()[highPriorityEnemy.type.ordinal()] + ", " + highPriorityEnemy.location);
-        rc.broadcast(msg);
+        (new AttackMsg(highPriorityEnemy)).send(rc);
 
         if (rc.getBroadcastCost() > status.energonLevel) {
             rc.clearBroadcast();
         }
     }
 
-    protected void recvHighPriorityEnemy() throws Exception {
-        Message[] msgs = rc.getAllMessages();
-        int sz = msgs.length;
-
-        for (int i=0; i<sz; i++) {
-
-            if (msgs[i] == null)
-                continue;
-
-            if ( msgs[i].ints == null
-                    || msgs[i].ints.length == 0
-                    || msgs[i].ints[0] != RANDOM_SEED) {
-
-                continue;
-            }
-
-            if ( msgs[i].locations == null
-                    || msgs[i].locations.length == 0
-                    || msgs[i].locations[0] == null) {
-
-                continue;
-            }
-
-            //Debugger.debug_print("Recv enemy.");
-            //Debugger.debug_print("Type: " + RobotType.values()[msgs[i].ints[1]]);
-            //Debugger.debug_print("Location: " + msgs[i].locations[0].toString());
-            //Debugger.debug_print("can attack? " + rc.canAttackSquare(msgs[i].locations[0]));
-
-            if (rc.canAttackSquare(msgs[i].locations[0])) {
-                highPriorityArchonEnemy = msgs[i].locations[0];
-                highPriorityArchonEnemyType = msgs[i].ints[1];
-                //sendHighPriorityArchonEnemy();
-                break;
-            }
+    protected void recvHighPriorityEnemy() {
+        if(!(msgQueue.peek() instanceof AttackMsg))    //MsgQueue says attacking isn't important atm.
+            return;
+        RobotInfo am = ((AttackMsg)msgQueue.poll()).info();
+        if (rc.canAttackSquare(am.location)) {
+            highPriorityArchonEnemy = am.location;
+            highPriorityArchonEnemyType = am.type.ordinal();
         }
         // sendHighPriorityArchonEnemy();
     }
@@ -543,7 +516,7 @@ public abstract class Bot {
         for(nAlliedAir = 0; nAlliedAir < len; nAlliedAir++) {
             thpa = calcAlliedArchonPriority(alliedArchons[nAlliedAir]);
 
-            if(thpa > highPriorityAlliedValue) {
+            if (thpa > highPriorityAlliedValue) {
                 highPriorityAlliedValue = thpa;
                 highPriorityAlliedArchon = alliedArchons[nAlliedAir];
             }

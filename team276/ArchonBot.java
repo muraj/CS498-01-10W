@@ -38,8 +38,7 @@ public class ArchonBot extends Bot {
             //if(!didSpawn)
             //	transferEnergon();
 
-            if (!didSpawn && status.roundsUntilMovementIdle == 0 && !rc.hasActionSet())
-                handleMovement();
+            handleMovement();
 
             yield();
         }
