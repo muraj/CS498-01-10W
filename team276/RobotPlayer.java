@@ -14,18 +14,27 @@ public class RobotPlayer implements Runnable {
             try {
                 b.AI();
             } catch (Exception e) {		//We fucked up.
-                System.out.println("!! Caught Exception !!");
-                e.printStackTrace();
-                if (DEBUG) {
-                    b.getRC().breakpoint();    //Debugging, breakpoint, then kill the bot
-                    break;
-                } else {
-                    try {
-                        createBot(b.getRC());	//If we're not debugging, 'save' the bot by resetting it.
-                    } catch (Exception e2) {
-                        break;
-                    }
-                }
+            	
+            	b.yield();
+            	continue;
+            	//Debugger.debug_print(Clock.getRoundNum() + "");
+            	//e.printStackTrace();
+            	//Debugger.debug_print("****************EXCEPTIONS**********");
+            	//b.rc.suicide();
+            	//b.rc.breakpoint();
+            	//continue;
+                // System.out.println("!! Caught Exception !!");
+                // e.printStackTrace();
+                // if (DEBUG) {
+                    // b.getRC().breakpoint();    //Debugging, breakpoint, then kill the bot
+                    // break;
+                // } else {
+                    // try {
+                        // createBot(b.getRC());	//If we're not debugging, 'save' the bot by resetting it.
+                    // } catch (Exception e2) {
+                        // break;
+                    // }
+                // }
             }
             b.yield();  //Should never get here.
         }

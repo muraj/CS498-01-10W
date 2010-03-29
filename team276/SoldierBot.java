@@ -22,7 +22,8 @@ public class SoldierBot extends Bot {
             transferEnergon();
             if(!attack())
             	handleMovement();
-            rc.yield();
+            //rc.yield();
+            yield();
         }
     }
 }

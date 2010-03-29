@@ -4,10 +4,11 @@ import battlecode.common.*;
 import java.util.Arrays;
 
 public class ArchonBot extends Bot {
+	//private static final double MINIMUM_ENERGY_TO_SPAWN = RobotType.ARCHON.maxEnergon()*.75;
     private static final int MINIMUM_ENERGY_TO_SPAWN = 70;
     private static final int MINIMUM_ENERGY_TO_TRANSFER = 25;
     private static final int UNITENERGY_TRANSFER = 10;
-    private static final double SOLDIER_TO_ARCHON_RATIO = 3;
+    private static final double SOLDIER_TO_ARCHON_RATIO = 2.5;
     private boolean didSpawn;
     private int lastSpawnRound;
 
@@ -20,28 +21,27 @@ public class ArchonBot extends Bot {
     }
 
     public void AI() throws Exception {
-        status = rc.senseRobotInfo(self);
-        while(status.energonLevel < MINIMUM_ENERGY_TO_SPAWN) {
-            yield();
-            status = rc.senseRobotInfo(self);
-        }
+       // status = rc.senseRobotInfo(self);
+        //while(status.energonLevel < MINIMUM_ENERGY_TO_SPAWN) {
+        //    yield();
+        //    status = rc.senseRobotInfo(self);
+       // }
 
         while (true) {
-            status = rc.senseRobotInfo(self);
-            senseNear();
-           // Debugger.debug_print("hpae: " + highPriorityEnemy);
-            sendHighPriorityEnemy();
-            spawnUnit();
-            if(didSpawn)
-            	transferEnergonArchon();
-            transferEnergon();
-            //if(!didSpawn)
-            //	transferEnergon();
+           status = rc.senseRobotInfo(self);
+           senseEdge();
+           senseNear();
+           recvKilledArchonMsg();
+           sendHighPriorityEnemy();
+           if(Clock.getRoundNum() % 10 == 0)
+           	   sendPulseMsg();
+           spawnUnit();
+           if(didSpawn)
+           	   transferEnergonArchon();
+           transferEnergon();
+           handleMovement();
 
-            if(!didSpawn && status.roundsUntilMovementIdle == 0 && !rc.hasActionSet())
-                handleMovement();
-
-            yield();
+           yield();
         }
     }
 
@@ -65,6 +65,12 @@ public class ArchonBot extends Bot {
             }
 
             ri = rc.senseRobotInfo(r);
+            
+            if(!status.team.equals(ri.team)) {
+            	didSpawn = false;
+            	lastSpawnRound = 0;
+            	return;
+            }
 
             // Last turn before awakened. Fill it up if we can!
             if(ri.maxEnergon -  ri.energonLevel < 1) {
