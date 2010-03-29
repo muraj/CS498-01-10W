@@ -70,7 +70,7 @@ public abstract class Bot {
         this.nEnemyAir = 0;
         this.nEnemyGround = 0;
         this.queuedMoveDirection = null;
-        this.LOW_HP_THRESH = rc.getRobotType().maxEnergon()*.25;
+        this.LOW_HP_THRESH = rc.getRobotType().maxEnergon()*.10;
         this.highPriorityArchonEnemy = null;
     }
 
@@ -344,12 +344,12 @@ public abstract class Bot {
         Direction flock = queuedMoveDirection;
         if (flock == null) {  //Need a direction!
             if (status.type == RobotType.ARCHON)
-                flock = flock(1, 5, 1, 0, 0, 0);
+                flock = flock(1, 10, 1, 0, 0, 0);
             else {
-                if (status.energonLevel < LOW_HP_THRESH)
-                    flock = flock(1, 2, 2, 0, 10, -2);    //Run away!
-               else
-                    flock = flock(5, 1, 0, 0, 1, 100);
+               //if (status.energonLevel < LOW_HP_THRESH)
+               //    flock = flock(1, 2, 2, 0, 10, -2);    //Run away!
+               //else
+                    flock = flock(0, 0, 0, 0, 0, 100);
             }
 
         }
@@ -399,7 +399,7 @@ public abstract class Bot {
         if (rc.hasBroadcastMessage())
             rc.clearBroadcast();
 
-        (new AttackMsg(highPriorityArchonEnemy)).send(rc);
+        (new AttackMsg(highPriorityEnemy)).send(rc);
 
         if (rc.getBroadcastCost() > status.energonLevel) {
             rc.clearBroadcast();

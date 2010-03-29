@@ -7,7 +7,7 @@ public class ArchonBot extends Bot {
     private static final double MINIMUM_ENERGY_TO_SPAWN = RobotType.ARCHON.maxEnergon()*.75;
     private static final int MINIMUM_ENERGY_TO_TRANSFER = 25;
     private static final int UNITENERGY_TRANSFER = 10;
-    private static final double SOLDIER_TO_ARCHON_RATIO = 3;
+    private static final double SOLDIER_TO_ARCHON_RATIO = 4;
     private boolean didSpawn;
     private int lastSpawnRound;
 
