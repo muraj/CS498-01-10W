@@ -6,12 +6,13 @@ public class SoldierBot extends Bot {
     public SoldierBot(RobotController rc) throws Exception {
         super(rc);
 
-        this.LOW_HP_THRESH = 40;
+        this.LOW_HP_THRESH = status.maxEnergon;
     }
 
     public void AI() throws Exception {
-        while(status.energonLevel < status.maxEnergon && status.energonReserve - GameConstants.ENERGON_RESERVE_SIZE > .5) {
-            status = rc.senseRobotInfo(self);
+        int wakeUp = Clock.getRoundNum() + status.type.wakeDelay();
+
+        while(Clock.getRoundNum() <= wakeUp) {
             rc.yield();
         }
 

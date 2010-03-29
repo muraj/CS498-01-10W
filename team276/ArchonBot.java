@@ -42,6 +42,10 @@ public class ArchonBot extends Bot {
         Robot r;
         RobotInfo ri;
         MapLocation ahead;
+        int spawnTurns = Clock.getRoundNum() - lastSpawnRound;
+
+        if(status.energonLevel < MINIMUM_ENERGY_TO_TRANSFER)
+            return;
 
         // Give buckets of energon to our new unit
         if(didSpawn) {
@@ -49,7 +53,7 @@ public class ArchonBot extends Bot {
             r = rc.senseGroundRobotAtLocation(ahead);
 
             if(r == null) {
-                if(Clock.getRoundNum() - lastSpawnRound == 0)
+                if(spawnTurns == 0)
                     return;
 
                 didSpawn = false;
@@ -67,24 +71,19 @@ public class ArchonBot extends Bot {
                 return;
             }
 
-            // Last turn before awakened. Fill it up if we can!
-            if(ri.maxEnergon -  ri.energonLevel < 1) {
+            if(ri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE) {
                 double need = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
-                double toGive = status.energonLevel - MINIMUM_ENERGY_TO_TRANSFER;
 
-                if(need < toGive)
-                    toGive = need;
-
-                if(toGive > 0)
-                    rc.transferUnitEnergon(toGive, ahead, RobotLevel.ON_GROUND);
-
+                rc.transferUnitEnergon(need, ahead, RobotLevel.ON_GROUND);
             }
 
-            // Give 1 energon until full
-            else if(ri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE) {
-                if(status.energonLevel > MINIMUM_ENERGY_TO_TRANSFER)
-                    rc.transferUnitEnergon(1, ahead, RobotLevel.ON_GROUND);
-
+            // He's full, fuck him.
+            else if(GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve < .5
+                && ri.maxEnergon - ri.energonLevel < .5) {
+                
+                didSpawn = false;
+                lastSpawnRound = 0;
+                return;
             }
         }
 
