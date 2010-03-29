@@ -44,7 +44,84 @@ public class ArchonBot extends Bot {
            yield();
         }
     }
-
+    
+    
+    public void transferEnergonArchon() throws Exception {
+        Robot r;
+        RobotInfo ri;
+        MapLocation ahead;
+        int spawnTurns = Clock.getRoundNum() - lastSpawnRound;
+ 
+        if(status.energonLevel < MINIMUM_ENERGY_TO_TRANSFER)
+            return;
+ 
+        // Give buckets of energon to our new unit
+        if(didSpawn) {
+            ahead = status.location.add(status.directionFacing);
+            r = rc.senseGroundRobotAtLocation(ahead);
+ 
+            if(r == null) {
+                if(spawnTurns == 0)
+                    return;
+ 
+                didSpawn = false;
+                lastSpawnRound = 0;
+                return;
+            }
+ 
+            ri = rc.senseRobotInfo(r);
+ 
+            // Apparently the guy we spawned got killaxed. Don't try to transfer
+            // energon to another unit that may be there.
+            if(!status.team.equals(ri.team)) {
+                didSpawn = false;
+                lastSpawnRound = 0;
+                return;
+            }
+ 
+            if(ri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE) {
+                double need = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
+ 
+                rc.transferUnitEnergon(need, ahead, RobotLevel.ON_GROUND);
+            }
+ 
+            // He's full, fuck him.
+            else if(GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve < .5
+                && ri.maxEnergon - ri.energonLevel < .5) {
+                
+                didSpawn = false;
+                lastSpawnRound = 0;
+                return;
+            }
+        }
+ 
+        else {
+            double enerToGive = status.energonLevel - MINIMUM_ENERGY_TO_TRANSFER;
+ 
+            if(enerToGive < 0)
+                return;
+ 
+            double perBot = enerToGive/nNeedEnergon;
+ 
+            // Give the peasents around us some energon
+            for(int i = 0; i < nNeedEnergon; i++) {
+                ri = alliedGround[needEnergon[i]];
+                double botEnerNeed = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
+ 
+                if(botEnerNeed > perBot)
+                    botEnerNeed = perBot;
+                    
+                rc.transferUnitEnergon(botEnerNeed, alliedGround[needEnergon[i]].location, RobotLevel.ON_GROUND);
+            }
+        }
+    }
+    
+    
+    
+    
+    
+    
+/*
     public void transferEnergonArchon() throws Exception {
         Robot r;
         RobotInfo ri;
@@ -112,7 +189,7 @@ public class ArchonBot extends Bot {
                 rc.transferUnitEnergon(botEnerNeed, alliedGround[needEnergon[i]].location, RobotLevel.ON_GROUND);
             }
         }
-    }
+    }*/
 
     public boolean canSpawn() throws Exception {
         MapLocation ahead;
@@ -157,7 +234,17 @@ public class ArchonBot extends Bot {
 
         // TODO Spawn a unit based on numbers of needed units
         if(needToSpawn()) {
-            rc.spawn(RobotType.SOLDIER);
+        	int nChainers = Math.max(alliedUnits[2], 1);
+        	int nSoliders = Math.max(alliedUnits[3], 1);
+        	
+        	if(nChainers * 2 < nSoliders)
+        		rc.spawn(RobotType.CHAINER);
+        	else
+        		rc.spawn(RobotType.SOLDIER);
+        	
+        	
+        	
+            //rc.spawn(RobotType.SOLDIER);
             didSpawn = true;
             lastSpawnRound = Clock.getRoundNum();
         }

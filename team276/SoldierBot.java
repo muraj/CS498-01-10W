@@ -10,10 +10,9 @@ public class SoldierBot extends Bot {
     }
 
     public void AI() throws Exception {
-        while(status.energonLevel < status.maxEnergon && status.energonReserve - GameConstants.ENERGON_RESERVE_SIZE > .5) {
-            status = rc.senseRobotInfo(self);
-            rc.yield();
-        }
+    	int wakeUp = Clock.getRoundNum() + status.type.wakeDelay();
+    	while(Clock.getRoundNum() <= wakeUp)
+    		rc.yield();
 
         while (true) {
             status = rc.senseRobotInfo(self);

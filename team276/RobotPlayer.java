@@ -37,6 +37,7 @@ public class RobotPlayer implements Runnable {
                 // }
             }
             b.yield();  //Should never get here.
+            continue;
         }
     }
     private void createBot(RobotController rc) throws Exception {

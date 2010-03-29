@@ -49,6 +49,7 @@ public abstract class Bot {
     protected int nNeedEnergonArchon;
     protected int nEnemyAir;
     protected int nEnemyGround;
+    protected int[] alliedUnits;
     
     protected int enemyArchonsKilled;
     protected ArrayList<Integer> enemyArchonIDs;
@@ -90,6 +91,7 @@ public abstract class Bot {
         this.edges = new MapLocation[9];
         this.mapBoundry = null;
         this.enemyArchonIDs = new ArrayList<Integer>(6);
+        this.alliedUnits = new int[8];
     }
 
     public final void resetMsgQueue() {
@@ -890,6 +892,7 @@ public abstract class Bot {
         nEnemyGround = 0;
         nNeedEnergon = 0;
         nNeedEnergonArchon = 0;
+        alliedUnits = new int[8];
 
         highPriorityEnemy = null;
         highPriorityAlliedArchon = null;
@@ -916,7 +919,8 @@ public abstract class Bot {
                 }
             }
             else {
-            	alliedAir[nAlliedAir++] = tri;	
+            	alliedAir[nAlliedAir++] = tri;
+            	alliedUnits[tri.type.ordinal()]++;
             	
             	if(tri.location.isAdjacentTo(status.location) && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
                     needEnergonArchon[nNeedEnergonArchon++] = nAlliedAir - 1;
@@ -963,6 +967,7 @@ public abstract class Bot {
 
             if(status.team.equals(tri.team)) {
                 alliedGround[nAlliedGround++] = tri;
+                alliedUnits[tri.type.ordinal()]++;
 
                 if(tri.location.isAdjacentTo(status.location) && tri.energonReserve < GameConstants.ENERGON_RESERVE_SIZE)
                     needEnergon[nNeedEnergon++] = nAlliedGround - 1;
