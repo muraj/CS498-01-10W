@@ -346,10 +346,10 @@ public abstract class Bot {
             if (status.type == RobotType.ARCHON)
                 flock = flock(1, 5, 1, 0, 0, 0);
             else {
-//                if (status.energonLevel < LOW_HP_THRESH)
-//                    flock = flock(1, 2, 2, 0, 10, -2);    //Run away!
-//               else
-                    flock = flock(5, 10, 0, 0, 1, 10);
+                if (status.energonLevel < LOW_HP_THRESH)
+                    flock = flock(1, 2, 2, 0, 10, -2);    //Run away!
+               else
+                    flock = flock(5, 1, 0, 0, 1, 100);
             }
 
         }
@@ -581,11 +581,9 @@ public abstract class Bot {
             return;
 
         toGive = GameConstants.ENERGON_RESERVE_SIZE - adjAvg;
-        toGive = toGive - status.energonLevel < 0 ? status.energonLevel*.1 : toGive;
+        toGive = toGive > status.energonLevel ? status.energonLevel*.1 : toGive;
         toGive /= (nNeedEnergon + nNeedEnergonArchon);
 
-        rc.setIndicatorString(1,"toGive: "+toGive+", nNeed: "+nNeedEnergon+", nA: "+nNeedEnergonArchon+", adjAvg: "+adjAvg);
-        rc.setIndicatorString(2,"hp: "+status.energonLevel);
         for (int i = 0; i < nNeedEnergon; i++) {
             RobotInfo ri = alliedGround[needEnergon[i]];
             double botEnerNeed = GameConstants.ENERGON_RESERVE_SIZE - ri.energonReserve;
